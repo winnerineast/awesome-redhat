@@ -38,12 +38,14 @@ graph TD
 
 ### 📗 DO180 — OpenShift Administration I: Operating a Production Cluster
 
+📖 **Local course materials:** [[DO180-OpenShift-Administration-I]]
+
 | | |
 |---|---|
 | **Duration** | 5 days |
 | **Format** | Classroom, Virtual, Self-paced |
 | **Prerequisites** | RH124 or equivalent Linux experience |
-| **Certification** | → EX180 (Red Hat Certified Technologist in OpenShift) |
+| **Certification** | → [[EX180-Containers-Kubernetes]] |
 
 **What you'll learn:**
 - Deploy and manage Kubernetes workloads on OpenShift
@@ -58,12 +60,14 @@ graph TD
 
 ### 📘 DO280 — OpenShift Administration II: Configuring a Production Cluster
 
+📖 **Local course materials:** [[DO280-OpenShift-Administration-II]]
+
 | | |
 |---|---|
 | **Duration** | 5 days |
 | **Format** | Classroom, Virtual, Self-paced |
 | **Prerequisites** | DO180 or equivalent experience |
-| **Certification** | → EX280 (Red Hat Certified OpenShift Administrator) |
+| **Certification** | → [[EX280-OpenShift-Admin]] |
 
 **What you'll learn:**
 - Configure authentication and authorization (OAuth, LDAP, RBAC)
@@ -79,12 +83,14 @@ graph TD
 
 ### 📙 DO380 — OpenShift Administration III: Scaling Deployments in the Enterprise
 
+📖 **Local course materials:** [[DO380-OpenShift-Administration-III]]
+
 | | |
 |---|---|
 | **Duration** | 5 days |
 | **Format** | Classroom, Virtual, Self-paced |
 | **Prerequisites** | DO280 or EX280 recommended |
-| **Certification** | → EX380 (Red Hat Certified Advanced System Administrator in OpenShift) |
+| **Certification** | → [[EX380-OpenShift-Advanced]] |
 
 **What you'll learn:**
 - Plan and implement OpenShift clusters at scale
@@ -115,5 +121,6 @@ After completing the core admin path, specialize in:
 
 - [Red Hat OpenShift documentation](https://docs.openshift.com/)
 - [OpenShift interactive learning](https://learn.openshift.com/)
-- [[EX280-OpenShift-Admin]] — Exam study guide
-- [[EX380-OpenShift-Advanced]] — Advanced exam study guide
+- [[EX180-Containers-Kubernetes]] — Containers and Kubernetes exam study guide
+- [[EX280-OpenShift-Admin]] — OpenShift Administrator exam study guide
+- [[EX380-OpenShift-Advanced]] — OpenShift Advanced Administrator exam study guide

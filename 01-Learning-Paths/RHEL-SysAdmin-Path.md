@@ -38,6 +38,8 @@ graph TD
 
 ### 🆓 RH066 — Fundamentals of Red Hat Enterprise Linux (Free)
 
+📖 **Local course materials:** [[RH066-Fundamentals-of-RHEL]]
+
 | | |
 |---|---|
 | **Duration** | ~10 hours |
@@ -48,6 +50,8 @@ graph TD
 ---
 
 ### 📗 RH124 — Red Hat System Administration I
+
+📖 **Local course materials:** [[RH124-System-Administration-I]]
 
 | | |
 |---|---|
@@ -67,6 +71,8 @@ graph TD
 ---
 
 ### 📘 RH134 — Red Hat System Administration II
+
+📖 **Local course materials:** [[RH134-System-Administration-II]]
 
 | | |
 |---|---|
@@ -88,17 +94,21 @@ graph TD
 
 ### 📙 RH199 — RHCSA Rapid Track
 
+📖 **Local course materials:** [[RH199-RHCSA-Rapid-Track]]
+
 | | |
 |---|---|
 | **Duration** | 5 days (accelerated RH124 + RH134) |
 | **Prerequisites** | Significant Linux experience |
-| **Certification** | → EX200 |
+| **Certification** | → [[EX200-RHCSA]] |
 
 Combined course for experienced Linux users who want to fast-track to RHCSA.
 
 ---
 
 ## EX200 — RHCSA Certification
+
+📖 **Local study guide & mock lab:** [[EX200-RHCSA]]
 
 The **Red Hat Certified System Administrator** exam covers:
 - Essential file management and text editing
@@ -109,8 +119,6 @@ The **Red Hat Certified System Administrator** exam covers:
 - Managing SELinux settings
 - Automating with simple shell scripts
 - Managing containers with Podman
-
-See [[EX200-RHCSA]] for detailed study guide.
 
 ---
 

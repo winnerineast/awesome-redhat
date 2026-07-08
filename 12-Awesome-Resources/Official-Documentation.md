@@ -1,22 +1,21 @@
 ---
-tags: [resources]
-status: draft
+tags: [resources, documentation]
+status: active
 created: 2025-07-08
 ---
-# Official Documentation
 
-## Red Hat Products
-- [OpenShift Container Platform](https://docs.openshift.com/) — Main OCP documentation
-- [RHEL Documentation](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/)
-- [Ansible Documentation](https://docs.ansible.com/)
-- [Ansible Automation Platform](https://access.redhat.com/documentation/en-us/red_hat_ansible_automation_platform/)
-- [Red Hat ACM](https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/)
+# 📚 Official Documentation Portals
 
-## Kubernetes (Upstream)
-- [Kubernetes Documentation](https://kubernetes.io/docs/)
-- [Kubernetes API Reference](https://kubernetes.io/docs/reference/kubernetes-api/)
-- [CNCF Landscape](https://landscape.cncf.io/)
+> Comprehensive list of official documentation websites, configuration guides, and API specifications.
 
-## Cheat Sheets
-- [oc CLI Reference](https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html)
-- [kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
+---
+
+## Documentation Portals
+
+- **[Red Hat Customer Portal](https://access.redhat.com/documentation/):** The primary knowledge base for all enterprise Red Hat products. Contains RHEL deployment books, OpenShift cluster setups, and security hardening guides.
+- **[Kubernetes Documentation](https://kubernetes.io/docs/):** Upstream API reference specifications for Pods, Services, Deployments, and core configurations.
+- **[Ansible Documentation](https://docs.ansible.com/):** Full syntax reference guide for writing playbooks, configuring inventories, and creating custom roles.
+
+## Related Notes
+- [[Blogs-and-Newsletters]] — Technical blogs
+- [[GitHub-Repos]] — Open-source repositories

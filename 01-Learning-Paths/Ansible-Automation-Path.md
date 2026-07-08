@@ -33,11 +33,13 @@ graph TD
 
 ### 📗 RH294 — Red Hat System Administration III: Linux Automation with Ansible
 
+📖 **Local course materials:** [[RH294-Ansible-Automation]]
+
 | | |
 |---|---|
 | **Duration** | 5 days |
 | **Prerequisites** | RHCSA (EX200) or equivalent |
-| **Certification** | → EX294 (Red Hat Certified Engineer) |
+| **Certification** | → [[EX294-Ansible]] |
 
 **What you'll learn:**
 - Install and configure Ansible on a control node
@@ -53,11 +55,13 @@ graph TD
 
 ### 📘 DO447 — Advanced Automation: Ansible Best Practices
 
+📖 **Local course materials:** [[DO447-Advanced-Ansible]]
+
 | | |
 |---|---|
 | **Duration** | 5 days |
 | **Prerequisites** | RH294 or EX294 |
-| **Certification** | → EX447 |
+| **Certification** | → [[EX447-Advanced-Ansible]] |
 
 **What you'll learn:**
 - Implement recommended practices for effective automation
@@ -72,6 +76,8 @@ graph TD
 ---
 
 ### 📙 DO457 — Ansible for Network Automation
+
+📖 **Local course materials:** [[DO457-Network-Automation]]
 
 | | |
 |---|---|
@@ -103,4 +109,5 @@ Once you have Ansible skills, extend into Kubernetes/OpenShift automation:
 
 - [Ansible Documentation](https://docs.ansible.com/)
 - [Ansible Galaxy](https://galaxy.ansible.com/) — Community roles & collections
-- [[EX294-Ansible]] — Exam study guide
+- [[EX294-Ansible]] — Core RHCE exam study guide
+- [[EX447-Advanced-Ansible]] — Advanced automation exam study guide

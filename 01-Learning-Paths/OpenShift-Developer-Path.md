@@ -34,6 +34,8 @@ graph TD
 
 ### 🆓 DO080 — Deploying Containerized Applications Technical Overview (Free)
 
+📖 **Local course materials:** [[DO080-Containerized-Applications-Overview]]
+
 | | |
 |---|---|
 | **Duration** | ~3 hours |
@@ -50,12 +52,14 @@ graph TD
 
 ### 📗 DO188 — Red Hat OpenShift Development I: Introduction to Containers with Podman
 
+📖 **Local course materials:** [[DO188-OpenShift-Development-I]]
+
 | | |
 |---|---|
 | **Duration** | 5 days |
 | **Format** | Classroom, Virtual, Self-paced |
 | **Prerequisites** | Programming experience in any language |
-| **Certification** | → EX180 |
+| **Certification** | → [[EX180-Containers-Kubernetes]] |
 
 **What you'll learn:**
 - Build and manage containers with Podman
@@ -70,12 +74,14 @@ graph TD
 
 ### 📘 DO288 — Red Hat OpenShift Development II: Building Kubernetes Applications
 
+📖 **Local course materials:** [[DO288-OpenShift-Development-II]]
+
 | | |
 |---|---|
 | **Duration** | 5 days |
 | **Format** | Classroom, Virtual, Self-paced |
 | **Prerequisites** | DO188 or equivalent |
-| **Certification** | → EX288 (Red Hat Certified OpenShift Application Developer) |
+| **Certification** | → [[EX288-OpenShift-Developer]] |
 
 **What you'll learn:**
 - Design containerized applications for OpenShift
@@ -89,7 +95,9 @@ graph TD
 
 ---
 
-### 📙 DO378 — Red Hat Cloud-Native Microservices Development with Quarkus
+### 💡 DO378 — Red Hat Cloud-Native Microservices Development with Quarkus
+
+📖 **Local course materials:** [[DO378-Cloud-Native-Microservices]]
 
 | | |
 |---|---|

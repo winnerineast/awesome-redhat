@@ -8,6 +8,8 @@ created: 2025-07-08
 
 > For solutions architects and tech leads who design, plan, and implement OpenShift-based infrastructure. Combines admin, developer, and cross-domain knowledge.
 
+📖 **Architectural Overview:** [[Architect-Path-Overview]]
+
 ---
 
 ## Path Overview
@@ -21,7 +23,7 @@ graph TD
     ARCH --> SEC["Security Architecture<br/>ACS, Compliance, Zero Trust"]
     ARCH --> SCALE["Scale & Performance<br/>Capacity Planning, Tuning"]
     
-    MULTI --> RHCA["RHCA<br/>Red Hat Certified Architect"]
+    MULTI --> RHCA["[[RHCA]]<br/>Red Hat Certified Architect"]
     HYBRID --> RHCA
     SEC --> RHCA
     SCALE --> RHCA
@@ -38,10 +40,10 @@ The Architect path is not a linear course sequence — it requires breadth acros
 
 | Foundation | Course | Status |
 |---|---|---|
-| Linux Administration | EX200 (RHCSA) | Required |
-| OpenShift Administration | EX280 (from [[OpenShift-Administrator-Path]]) | Required |
-| OpenShift Development | EX288 or equivalent | Recommended |
-| Ansible Automation | EX294 or equivalent | Recommended |
+| Linux Administration | [[EX200-RHCSA]] | Required |
+| OpenShift Administration | [[EX280-OpenShift-Admin]] | Required |
+| OpenShift Development | [[EX288-OpenShift-Developer]] | Recommended |
+| Ansible Automation | [[EX294-Ansible]] | Recommended |
 
 ---
 
@@ -92,8 +94,8 @@ The Architect path is not a linear course sequence — it requires breadth acros
 
 | Course | Topic | Focus |
 |---|---|---|
-| DO280 | OCP Admin II | Cluster configuration |
-| DO380 | OCP Admin III | Enterprise scaling |
+| [[DO280-OpenShift-Administration-II]] | OCP Admin II | Cluster configuration |
+| [[DO380-OpenShift-Administration-III]] | OCP Admin III | Enterprise scaling |
 | DO370 | Enterprise K8s Storage | ODF deep-dive |
 | DO322 | OCP Installation | Multi-env installation |
 | DO425 | Security with ACS | Security architecture |
@@ -101,18 +103,18 @@ The Architect path is not a linear course sequence — it requires breadth acros
 
 ---
 
-## RHCA — Red Hat Certified Architect
+## [[RHCA]] — Red Hat Certified Architect
 
 The **Red Hat Certified Architect** requires:
-1. Active RHCE (EX294) certification
+1. Active RHCE ([[EX294-Ansible]]) certification
 2. Pass **5 additional** Red Hat concentration exams from a qualifying list
 
 Common architect-track exams:
-- EX280 — OpenShift Administrator
-- EX380 — Advanced OpenShift Administrator
-- EX288 — OpenShift Application Developer
-- EX447 — Advanced Automation: Ansible Best Practices
-- EX180 — Containers and Kubernetes
+- [[EX280-OpenShift-Admin]] — OpenShift Administrator
+- [[EX380-OpenShift-Advanced]] — Advanced OpenShift Administrator
+- [[EX288-OpenShift-Developer]] — OpenShift Application Developer
+- [[EX447-Advanced-Ansible]] — Advanced Automation: Ansible Best Practices
+- [[EX180-Containers-Kubernetes]] — Containers and Kubernetes
 
 ---
 
