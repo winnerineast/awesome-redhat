@@ -1,0 +1,16 @@
+{
+  "useMarkdownLinks": false,
+  "strictLineBreaks": true,
+  "smartIndentList": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "00-Home",
+  "attachmentFolderPath": "Assets/images",
+  "showFrontmatter": true,
+  "livePreview": true,
+  "defaultViewMode": "preview",
+  "readableLineLength": true,
+  "showLineNumber": true,
+  "foldHeading": true,
+  "foldIndent": true,
+  "alwaysUpdateLinks": true
+}
