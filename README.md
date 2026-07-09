@@ -9,9 +9,9 @@
 
 ---
 
-## 🚀 The Local Offline Academy (New in v2.0.0!)
+## 🚀 The Local Offline Academy (Enriched in v2.1.0!)
 
-This repository has been upgraded from a simple link aggregator into a **fully-fledged, self-contained offline learning platform**. You no longer need external subscription resources to study the core concepts. All curriculum notes, CLI walkthroughs, architectural design records, and practice exams reside directly inside this vault.
+This repository is a **fully-fledged, self-contained offline learning platform**. You no longer need external resources to study core concepts. All curriculum notes, CLI walkthroughs, configuration templates, architectural design records, and practice exams reside directly inside this vault. In **v2.1.0**, all OpenShift courses (DO180, DO280, DO380, DO188, DO288, DO378) have been fully enriched with in-depth architectures, copy-pasteable YAML manifests, troubleshooting cheat-sheets, and step-by-step local practice labs.
 
 ### Option 1: Open in Obsidian (Recommended)
 Obsidian connects these markdown files into a browsable local wiki with dynamic graph views, backlinks, and instant search indexers.
