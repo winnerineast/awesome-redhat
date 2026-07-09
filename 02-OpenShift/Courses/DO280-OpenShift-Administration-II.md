@@ -24,10 +24,10 @@ created: 2025-07-08
 | **Code** | DO280 |
 | **Duration** | 5 days (40 hours) |
 | **Format** | Classroom, Virtual, Self-paced |
-| **Prerequisites** | [[DO180-OpenShift-Administration-I]] or equivalent |
-| **Next Step** | [[DO380-OpenShift-Administration-III]] |
-| **Certification** | Maps directly to [[EX280-OpenShift-Admin]] |
-| **Learning Path** | [[OpenShift-Administrator-Path]] |
+| **Prerequisites** | [DO180-OpenShift-Administration-I](DO180-OpenShift-Administration-I.md) or equivalent |
+| **Next Step** | [DO380-OpenShift-Administration-III](DO380-OpenShift-Administration-III.md) |
+| **Certification** | Maps directly to [EX280-OpenShift-Admin](../../11-Certifications/EX280-OpenShift-Admin.md) |
+| **Learning Path** | [OpenShift-Administrator-Path](../../01-Learning-Paths/OpenShift-Administrator-Path.md) |
 
 ## Learning Objectives
 
@@ -46,22 +46,25 @@ After completing this course, you will be able to:
 ## Module 1: Authentication & User Management
 
 ### OAuth Architecture in OpenShift
-
-OpenShift includes a built-in OAuth server. Users request tokens from the OAuth server, which validates credentials against a configured **Identity Provider (IDP)**.
+OpenShift includes a built-in OAuth server. When users log in, the OAuth server validates credentials against the configured **Identity Provider (IDP)**. If valid, the OAuth server issues an API token back to the user.
 
 ```
   1. Login request
   User ───────────────▶ OAuth Server (Built-in)
-                            │
-                            │ 2. Validate credentials
-                            ▼
-                    Identity Provider (IDP)
-               (HTPasswd, LDAP, Keycloak, etc.)
+                             │
+                             │ 2. Validate credentials
+                             ▼
+                     Identity Provider (IDP)
+                (HTPasswd, LDAP, Keycloak, etc.)
 ```
 
-### Configuring HTPasswd Identity Provider
+### Identity Provider Mapping Methods
+- **`claim`:** Automatically provisions a new user based on their IDP username. This is the default.
+- **`lookup`:** Only allows users who already have an existing `User` object manually created in OpenShift.
+- **`add`:** Adds the login identity to an existing user if a matching username exists; otherwise, it fails.
 
-HTPasswd is a quick, file-backed identity provider useful for testing or local admin configuration.
+### Configuring HTPasswd Identity Provider
+HTPasswd is a quick file-backed provider.
 
 ```bash
 # 1. Create a local htpasswd file with users
@@ -71,12 +74,16 @@ htpasswd -B -b /tmp/users.htpasswd developer dev123
 # 2. Upload the file as a Secret in the openshift-config namespace
 oc create secret generic htpasswd-secret --from-file=htpasswd=/tmp/users.htpasswd -n openshift-config
 
-# 3. Edit the OAuth cluster configuration to use this provider
+# 3. Edit the OAuth cluster configuration to reference this secret
 oc edit oauth cluster
 ```
 
-**OAuth Resource configuration snippet (`oauth.spec`):**
+**OAuth custom resource configuration (`oauth.spec`):**
 ```yaml
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
 spec:
   identityProviders:
   - name: my-htpasswd-provider
@@ -88,18 +95,16 @@ spec:
 ```
 
 ### Managing Users and Groups
-
 ```bash
-# List local cluster users
+# Get all mapped users and identities
 oc get users
 oc get identities
 
-# Create a local group
+# Create group for development team
 oc create group dev-team
 
-# Add users to a group
+# Add user "developer" to group
 oc adm groups add-users dev-team developer
-oc get groups
 ```
 
 ---
@@ -107,8 +112,7 @@ oc get groups
 ## Module 2: Role-Based Access Control (RBAC)
 
 ### RBAC Hierarchy
-
-OpenShift differentiates between **Cluster Roles** (cluster-wide access) and **Local Roles** (namespace-scoped access).
+OpenShift maps permissions using standard Kubernetes Role-Based Access Control objects.
 
 ```
                       ┌──────────────────┐
@@ -123,134 +127,233 @@ OpenShift differentiates between **Cluster Roles** (cluster-wide access) and **L
                       └──────────────────┘
 ```
 
-**Common Predefined Roles:**
-- `admin` — Full control within a single project (can manage permissions).
-- `edit` — Modify resources in a project, but cannot manage local roles.
-- `view` — Read-only access to resources in a project.
-- `cluster-admin` — Superuser access across the entire cluster.
+### Predefined Roles
+- `view`: Read-only access to most resources in a project. Cannot read Secrets.
+- `edit`: Read/write access within a project. Cannot modify roles or bindings.
+- `admin`: Full control within a project, including managing local RBAC.
+- `cluster-admin`: Full superuser access across all projects and cluster configurations.
 
-### Configuring Permissions via CLI
+### RBAC API Verb Structure
+Permissions are structured as API rules targeting resource groups and actions:
 
+| API Group | Resources | Verbs |
+|---|---|---|
+| `""` (Core) | `pods`, `services`, `configmaps`, `secrets` | `get`, `list`, `watch`, `create`, `update`, `patch`, `delete` |
+| `apps` | `deployments`, `statefulsets` | `get`, `list`, `create`, `update`, `delete` |
+| `route.openshift.io` | `routes` | `get`, `list`, `create`, `update`, `delete` |
+
+### CLI Administration Commands
 ```bash
-# Assign local role to a user
-oc adm policy add-role-to-user edit developer -n my-app-dev
+# Assign local role to a user within a project
+oc adm policy add-role-to-user edit developer -n my-project
 
-# Assign local role to a group
-oc adm policy add-role-to-group view dev-team -n my-app-prod
+# Assign local role to a group within a project
+oc adm policy add-role-to-group view dev-team -n my-project
 
-# Assign cluster-wide admin role (use with caution!)
-oc adm policy add-cluster-role-to-user cluster-admin admin-user
+# Assign cluster role to a user (across all namespaces)
+oc adm policy add-cluster-role-to-user cluster-admin cluster-ops-user
 
-# Remove permission mappings
-oc adm policy remove-role-from-user edit developer -n my-app-dev
+# Check current local bindings in a project
+oc get rolebindings -n my-project
 ```
 
 ---
 
 ## Module 3: Secure Cluster Ingress & Routes
 
-### Service to Route Mechanics
-
-OpenShift Routes expose Services externally by registering DNS names on the OpenShift Ingress Controller (HAProxy-based).
+OpenShift Ingress router is driven by an HAProxy daemon running inside the cluster. It intercepts traffic targeting Route domains and directs them to the target Service IPs.
 
 ```
- External Traffic ──▶ Router (HAProxy) ──▶ Service (Cluster IP) ──▶ Pod (Container)
+  HTTPS Client ──▶ Router (HAProxy Decrypts Edge) ──▶ Service IP ──▶ Pods
 ```
 
-### HTTPS Route Encryption Types
+### Route Encryption Types
 
-| Type | Decryption Point | Router-to-Pod Protocol | Notes |
-|---|---|---|---|
-| **Edge** | At the Router | Unencrypted (HTTP) | Easiest to manage; certificates hosted on Router |
-| **Passthrough** | At the Pod | Encrypted (HTTPS) | Most secure; certificate managed inside application |
-| **Re-encrypt** | At Router AND Pod | Encrypted (HTTPS) | Double encryption; certificate changed at Router |
+#### 1. Edge Route
+TLS is terminated at the router. Traffic from the router to the backend pods is unencrypted HTTP.
+```yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: edge-route
+  namespace: my-project
+spec:
+  to:
+    kind: Service
+    name: frontend-svc
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    key: |-
+      -----BEGIN PRIVATE KEY-----
+      MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC3...
+      -----END PRIVATE KEY-----
+    certificate: |-
+      -----BEGIN CERTIFICATE-----
+      MIIDzTCCArWgAwIBAgIQC...
+      -----END CERTIFICATE-----
+```
 
-### Creating Secure Routes via CLI
+#### 2. Passthrough Route
+Router does not decrypt the traffic. The encrypted packet is passed directly to the pod. The application running in the pod must manage the SSL handshake and certificates.
+```yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: passthrough-route
+  namespace: my-project
+spec:
+  to:
+    kind: Service
+    name: database-ssl-svc
+  port:
+    targetPort: 8443
+  tls:
+    termination: passthrough
+```
 
-```bash
-# Create an Edge HTTPS Route
-oc create route edge secure-web --service=webserver \
-  --hostname=secure.apps.cluster.example.com \
-  --key=/tmp/tls.key --cert=/tmp/tls.crt
-
-# Create a Passthrough HTTPS Route (no certs uploaded to router)
-oc create route passthrough secure-db --service=mysql-ssl \
-  --hostname=db.apps.cluster.example.com
+#### 3. Re-encrypt Route
+Router terminates TLS with an external certificate, inspects header policies, and then initiates a *new* TLS handshake with the backend pod using an internal CA certificate.
+```yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: reencrypt-route
+  namespace: my-project
+spec:
+  to:
+    kind: Service
+    name: backend-secure-svc
+  port:
+    targetPort: 8443
+  tls:
+    termination: reencrypt
+    key: |
+      -----BEGIN PRIVATE KEY-----
+      ...
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      ...
+    destinationCACertificate: |
+      -----BEGIN CERTIFICATE-----
+      ... (CA to validate backend pod cert)
 ```
 
 ---
 
 ## Module 4: Network Isolation (NetworkPolicies)
 
-By default in Kubernetes and OpenShift, all pods in all projects can talk to each other. **NetworkPolicies** define firewall rules between namespace boundaries.
+By default, Kubernetes has a flat network where all pods can communicate with all other pods across any project boundaries. OpenShift utilizes OVN-Kubernetes CNI to enforce isolation using **NetworkPolicies**.
 
-### Default Deny-All ingress policy
+### Complete Isolation manifests
 
+#### 1. Default Deny-All Ingress (`deny-all.yaml`)
+Ensures no outside traffic can reach pods in the namespace unless explicitly allowed by another policy.
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: deny-all-ingress
-  namespace: my-app-dev
+  namespace: my-project
 spec:
-  podSelector: {} # Selects all pods in this project
+  podSelector: {} # Targets all pods in this project
   policyTypes:
   - Ingress
 ```
 
-### Allowing Ingress Traffic from Specific Projects
-
+#### 2. Allow Only from Frontend Namespace (`allow-frontend.yaml`)
+Allows incoming traffic to database pods *only* if the traffic originates from pods in the namespace labeled `kubernetes.io/metadata.name: frontend-project`.
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-frontend-only
-  namespace: my-app-dev
+  namespace: my-project
 spec:
   podSelector:
     matchLabels:
-      role: database # Apply rule only to database pods
+      role: database
   policyTypes:
   - Ingress
   ingress:
   - from:
     - namespaceSelector:
         matchLabels:
-          kubernetes.io/metadata.name: frontend-ns # Only allow traffic from this namespace
+          kubernetes.io/metadata.name: frontend-project
+```
+
+#### 3. Allow Egress Only to DB Port (`allow-egress-db.yaml`)
+Restricts outward traffic from app pods to only allow traffic going to port 5432.
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: limit-app-egress
+  namespace: my-project
+spec:
+  podSelector:
+    matchLabels:
+      role: app
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          role: database
+    ports:
+    - protocol: TCP
+      port: 5432
 ```
 
 ---
 
 ## Module 5: Control Pod Scheduling
 
-### Node Selectors (Simple Placement)
+### Node Selectors
+Specifies basic label requirements for pod scheduling.
+```yaml
+# Pod spec snippet:
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/infra: ""
+```
 
-Assign labels to nodes, and tell deployments to run only on nodes with matching labels.
+### Node Affinity
+Provides granular placement rules using logical operators (In, NotIn, Exists, etc.).
+- **`requiredDuringSchedulingIgnoredDuringExecution`:** Hard constraint (must match or scheduling fails).
+- **`preferredDuringSchedulingIgnoredDuringExecution`:** Soft constraint (scheduler attempts to place, but falls back if unavailable).
 
-```bash
-# Label a node
-oc label node worker-1.example.com node-role.kubernetes.io/infra=
-
-# Update deployment to target this label
-oc set env deployment/router -c=router --overwrite \
-  nodeSelector="node-role.kubernetes.io/infra="
+```yaml
+# Pod spec snippet:
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values:
+            - us-east-1a
+            - us-east-1b
 ```
 
 ### Taints and Tolerations
-
-Taints allow a node to **repel** a set of pods. A pod must have a matching **toleration** to run on a tainted node.
-
+Nodes can be tainted to repel pods. Pods will only schedule if they have matching tolerations.
 ```bash
-# Taint a node
-oc adm taint nodes node-2.example.com dedicated=db:NoSchedule
-#   Effect: NoSchedule, PreferNoSchedule, or NoExecute
+# Taint node to repel all pods except db
+oc adm taint nodes worker-1.example.com dedicated=db-only:NoSchedule
+```
 
-# Add toleration to a Pod specification:
+```yaml
+# Pod spec snippet to tolerate the taint:
 spec:
   tolerations:
   - key: "dedicated"
     operator: "Equal"
-    value: "db"
+    value: "db-only"
     effect: "NoSchedule"
 ```
 
@@ -258,42 +361,38 @@ spec:
 
 ## Module 6: Resource Quotas and LimitRanges
 
-### ResourceQuotas (Project-wide constraints)
-
-Restricts the total sum of CPU, Memory, or Resource count in a project.
-
+### ResourceQuotas
+Defines total aggregate resource consumption limit for a project.
 ```yaml
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: compute-resources
-  namespace: my-app-dev
+  name: project-quota
+  namespace: my-project
 spec:
   hard:
-    pods: "10"
-    requests.cpu: "4"
-    requests.memory: "8Gi"
-    limits.cpu: "8"
-    limits.memory: "16Gi"
+    pods: "5"
+    requests.cpu: "2"
+    requests.memory: "4Gi"
+    limits.cpu: "4"
+    limits.memory: "8Gi"
 ```
 
-### LimitRanges (Default container constraints)
-
-Defines default requests and limits for any container created *without* them, and defines min/max acceptable requests.
-
+### LimitRanges
+Defines default resource requests/limits for individual containers within the project.
 ```yaml
 apiVersion: v1
 kind: LimitRange
 metadata:
-  name: default-limits
-  namespace: my-app-dev
+  name: container-limits
+  namespace: my-project
 spec:
   limits:
-  - default: # Default limits
+  - default:
       cpu: 500m
       memory: 512Mi
-    defaultRequest: # Default requests
-      cpu: 200m
+    defaultRequest:
+      cpu: 100m
       memory: 256Mi
     type: Container
 ```
@@ -302,30 +401,94 @@ spec:
 
 ## Module 7: Security Context Constraints (SCC)
 
-SCCs govern what actions a pod can perform in OpenShift (similar to Pod Security Standards in K8s).
+OpenShift uses SCCs to govern pod security permissions (e.g. access to host networks, host path storage mounts, or running as root).
+- **`restricted-v2`:** Default policy. Forces containers to run with a random non-root UID, blocks host access.
+- **`anyuid`:** Allows container to run as user root (`UID 0`). Often needed for legacy database/web server images.
+- **`privileged`:** Full container access to host node hardware and kernel features.
 
-| SCC | Permissions |
-|---|---|
-| **restricted-v2** | Default SCC. No root execution, no host network, no host path mount |
-| **anyuid** | Allows running containers as any user ID (including root) |
-| **privileged** | Full administrative system rights on host node |
+### Troubleshooting SCC Failures
+- **Issue:** Running a third-party image fails with `CreateContainerConfigError` or `Permission Denied` because it attempts to write to `/var/run` or run as root user.
+- **Diagnostics:**
+  ```bash
+  # Check events to see if pod is rejected due to SCC constraints
+  oc get events --sort-by='.metadata.creationTimestamp'
+  ```
+- **Remediation:** Grant the service account permissions to run under `anyuid` SCC:
+  ```bash
+  oc adm policy add-scc-to-user anyuid -z default -n my-project
+  ```
 
+---
+
+## Practice Lab: Multi-Tenant Security & Isolation
+
+### Objective
+Create two projects, isolate them using a NetworkPolicy, and grant restricted access to developer teams.
+
+### Step 1: Create Projects
 ```bash
-# Check SCCs mapped to a service account
-oc describe scc restricted-v2
-
-# Grant a ServiceAccount permissions to run as root (anyuid)
-oc adm policy add-scc-to-user anyuid -z default -n my-app-dev
-#   -z = service account name
+oc new-project secure-frontend
+oc new-project secure-backend
 ```
+
+### Step 2: Deploy Workloads
+```bash
+# Deploy a frontend web server
+oc create deployment web --image=registry.access.redhat.com/ubi9/nginx-120 -n secure-frontend
+oc expose deployment/web --port=8080 -n secure-frontend
+
+# Deploy a backend application
+oc create deployment database --image=registry.access.redhat.com/ubi9/mariadb-105 -n secure-backend
+oc expose deployment/database --port=3306 -n secure-backend
+```
+
+### Step 3: Verify Cross-Namespace Access (Before Network Policy)
+```bash
+# Test connectivity from frontend namespace to backend database service
+oc exec -it deployment/web -n secure-frontend -- curl -v database.secure-backend.svc:3306
+# Output should show "Connected to database" (or connection attempt packets received)
+```
+
+### Step 4: Apply Network Isolation Policy
+Create a NetworkPolicy in `secure-backend` to reject all traffic except that which comes from the `secure-frontend` project.
+
+Label the frontend project:
+```bash
+oc label namespace secure-frontend role=frontend
+```
+
+Apply the policy in `secure-backend`:
+```yaml
+# backend-policy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-only
+  namespace: secure-backend
+spec:
+  podSelector: {} # Target all pods in backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          role: frontend
+```
+```bash
+oc apply -f backend-policy.yaml
+```
+
+### Step 5: Verify Isolation
+Create a third project `external-sandbox` and attempt to curl the database. It should fail (timeout). Traffic from `secure-frontend` to `secure-backend` should still succeed.
 
 ---
 
 ## Related Notes
 
-- [[OAuth-and-Identity-Providers]] — Detailed OAuth steps
-- [[Network-Policies]] — Microsegmentation strategies
-- [[Ingress-and-Routes]] — Secure routes configurations
-- [[Machine-Sets-and-Machine-Config]] — Infrastructure configuration
-- [[EX280-OpenShift-Admin]] — Exam study guide
-- [[OpenShift-Administrator-Path]] — MOC
+- [OAuth-and-Identity-Providers](../Security/OAuth-and-Identity-Providers.md) — Detailed OAuth steps
+- [Network-Policies](../Security/Network-Policies-Security.md) — Microsegmentation strategies
+- [Ingress-and-Routes](../Networking/Ingress-and-Routes.md) — Secure routes configurations
+- [Machine-Sets-and-Machine-Config](../Scaling-and-Performance/Machine-Sets-and-Machine-Config.md) — Infrastructure configuration
+- [EX280-OpenShift-Admin](../../11-Certifications/EX280-OpenShift-Admin.md) — Exam study guide
+- [OpenShift-Administrator-Path](../../01-Learning-Paths/OpenShift-Administrator-Path.md) — MOC

@@ -24,10 +24,10 @@ created: 2025-07-08
 | **Code** | DO288 |
 | **Duration** | 5 days (40 hours) |
 | **Format** | Classroom, Virtual, Self-paced |
-| **Prerequisites** | [[DO188-OpenShift-Development-I]] or equivalent |
-| **Next Step** | [[DO378-Cloud-Native-Microservices]] |
-| **Certification** | Maps directly to [[EX288-OpenShift-Developer]] |
-| **Learning Path** | [[OpenShift-Developer-Path]] |
+| **Prerequisites** | [DO188-OpenShift-Development-I](DO188-OpenShift-Development-I.md) or equivalent |
+| **Next Step** | [DO378-Cloud-Native-Microservices](DO378-Cloud-Native-Microservices.md) |
+| **Certification** | Maps directly to [EX288-OpenShift-Developer](../../11-Certifications/EX288-OpenShift-Developer.md) |
+| **Learning Path** | [OpenShift-Developer-Path](../../01-Learning-Paths/OpenShift-Developer-Path.md) |
 
 ## Learning Objectives
 
@@ -43,58 +43,45 @@ After completing this course, you will be able to:
 
 ## Module 1: Source-to-Image (S2I) Builds
 
-### S2I Architecture
-
-Source-to-Image (S2I) is a framework that combines application source code from Git with a pre-configured **Builder Image** to compile and produce a runnable container image.
-
-```
-  Git Repo (Code) ──┐
-                    ├──▶ S2I Builder engine ──▶ Runnable Image ──▶ ImageStream
-  Builder Image  ───┘
-```
-
-### Deploying via S2I
-
-```bash
-# Deploy Python app using S2I builder image
-oc new-app python:3.9~https://github.com/sclorg/django-ex.git --name=django-app
-
-# View build configurations and progress
-oc get bc
-oc logs -f bc/django-app
-```
+Source-to-Image (S2I) compiles application source code from Git directly inside a pre-built **Builder Image** to create a runnable container image.
 
 ### Custom S2I Builder Image Structure
-
-To create your own S2I builder image, you must define:
-1. A base image containing compile and runtime environments (e.g. Node, Python).
-2. S2I scripts located at `/usr/libexec/s2i/` (or configured via labels):
-   - **`assemble`:** Copies code to work directory, installs dependencies, and runs build steps.
-   - **`run`:** Executable shell script starting the application in foreground.
-   - **`save-artifacts` (optional):** Packages dependencies for incremental builds.
-   - **`usage` (optional):** Prints usage instructions.
+To create your own custom builder image, your project must include:
+1. **Containerfile:** Installs runtimes/compilers and sets the S2I scripts location.
+2. **S2I Scripts (written in shell script):**
+   - **`assemble`:** Copies code to work directory, downloads package libraries, and compiles binaries.
+   - **`run`:** Starts the application (must run in foreground to keep container running).
+   - **`save-artifacts` (optional):** Packages build dependencies to accelerate incremental builds.
 
 ```dockerfile
-# Custom Builder Image Containerfile:
-FROM registry.access.redhat.com/ubi9/ubi-minimal
+# Builder Containerfile:
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 LABEL io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"
 RUN microdnf install -y tar gzip && microdnf clean all
 COPY ./s2i/bin/ /usr/libexec/s2i/
 ```
 
+### CLI Build Triggers
+```bash
+# Trigger an S2I build from Git repository
+oc new-app python:3.9~https://github.com/sclorg/django-ex.git --name=django-web
+
+# Stream build logs
+oc logs -f bc/django-web
+```
+
 ---
 
-## Module 2: Workload Customization (Helm & Templates)
+## Module 2: Workload Customization (Templates & Helm)
 
 ### OpenShift Templates
-
-Templates define a list of Kubernetes/OpenShift objects that can be parameterized.
+Templates represent parameterizable resource blueprints.
 
 ```yaml
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
-  name: my-app-template
+  name: web-template
 objects:
 - apiVersion: apps/v1
   kind: Deployment
@@ -113,110 +100,179 @@ parameters:
 - name: IMAGE_NAME
   value: registry.access.redhat.com/ubi9/httpd-24
 ```
-
 ```bash
-# Process and deploy template
+# Deploy template with parameters
 oc process -f template.yaml -p APP_NAME=dev-web | oc apply -f -
 ```
 
 ### Packaging Workloads with Helm
-
-Helm manages Kubernetes packages called **Charts**.
-
+Helm handles packages called Charts. A typical chart folder:
+```
+my-chart/
+  ├── Chart.yaml          # Metadata
+  ├── values.yaml          # Default variables
+  └── templates/           # Kubernetes manifests
+      ├── deployment.yaml
+      └── service.yaml
+```
 ```bash
-# Install a chart from a repository
+# Register repository and install release
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm install my-release bitnami/nginx
-
-# Customize installations using value overrides
-helm install my-release bitnami/nginx --set service.type=ClusterIP
-
-# List and upgrade releases
-helm list
-helm upgrade my-release bitnami/nginx --set service.type=LoadBalancer
+helm install my-app-release bitnami/nginx --set service.type=ClusterIP
 ```
 
 ---
 
-## Module 3: Advanced Configurations & Downward API
+## Module 3: Downward API Configurations
 
-### Downward API
-
-Allows containers to inspect their own metadata (e.g., namespace, Pod IP, node name) without invoking the Kubernetes API directly.
+The Downward API allows containers to inspect their own runtime metadata (e.g. Node name, Pod IP, limits) without making direct queries to the Kubernetes API server.
 
 ```yaml
-# Mount metadata as environment variables inside a Deployment:
+# Pod spec snippet:
 spec:
   containers:
-  - name: my-app
-    image: registry.access.redhat.com/ubi9/httpd-24
+  - name: app-container
+    image: registry.access.redhat.com/ubi9/ubi-minimal
     env:
-    - name: MY_POD_NAME
+    - name: POD_NAME
       valueFrom:
         fieldRef:
           fieldPath: metadata.name
-    - name: MY_POD_NAMESPACE
+    - name: POD_NAMESPACE
       valueFrom:
         fieldRef:
           fieldPath: metadata.namespace
-    - name: MY_POD_IP
+    - name: CPU_LIMIT
       valueFrom:
-        fieldRef:
-          fieldPath: status.podIP
+        resourceFieldRef:
+          containerName: app-container
+          resource: limits.cpu
 ```
 
 ---
 
 ## Module 4: CI/CD Pipelines with OpenShift Pipelines (Tekton)
 
-OpenShift Pipelines is a cloud-native CI/CD solution based on **Tekton**. It runs each step of the pipeline inside a dedicated container on the cluster.
-
-### Tekton Resource Hierarchy
+OpenShift Pipelines runs cloud-native CI/CD workloads. Every Task executes inside a dedicated Pod on the cluster.
 
 ```
-  PipelineRun (Executes a Pipeline with parameters)
-       │
-       ▼
-  Pipeline (Defines order of Tasks to run)
-       │
-       ▼
-  TaskRun (Executes a single Task)
-       │
-       ▼
-  Task (Defines reusable steps inside containers)
+  Git Webhook ──▶ EventListener ──▶ TriggerTemplate ──▶ PipelineRun (Pod)
 ```
 
-### Reusable Task Example
+### Tekton Resource Elements
+- **Task:** Reusable step-by-step shell execution units running in separate containers.
+- **Pipeline:** Links multiple Tasks together in a directed acyclic graph (DAG).
+- **Workspaces:** Shared persistent storage volumes mapping code directories across Task runs.
 
+### Automating with Tekton Triggers
+To trigger builds automatically on Git commit pushes:
+1. **EventListener:** Listens for HTTP webhook payloads outside the cluster.
+2. **TriggerBinding:** Extracts Git parameters (e.g. Git URL, Branch commit).
+3. **TriggerTemplate:** Generates a `PipelineRun` manifest using parameters from the binding.
+
+---
+
+## Practice Lab: Building a Tekton CI/CD Pipeline
+
+### Objective
+Create a Tekton pipeline that clones a Git repository, prints the contents, and deploys a web server.
+
+### Step 1: Create a Project
+```bash
+oc new-project pipelining
+```
+
+### Step 2: Define the Git Clone Task
 ```yaml
+# task-clone.yaml
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: git-clone
+  name: clone-repo
 spec:
-  params:
-  - name: repo-url
-    type: string
+  workspaces:
+  - name: shared-workspace
   steps:
-  - name: clone
-    image: alpine/git
+  - name: git-clone
+    image: alpine/git:v2.26.2
     script: |
-      git clone $(params.repo-url) /workspace/source
+      git clone https://github.com/sclorg/django-ex.git $(workspaces.shared-workspace.path)/source
+```
+```bash
+oc apply -f task-clone.yaml
 ```
 
-### Execution
-
+### Step 3: Define the Pipeline
+```yaml
+# pipeline.yaml
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-pipeline
+spec:
+  workspaces:
+  - name: pipeline-workspace
+  tasks:
+  - name: fetch-source
+    taskRef:
+      name: clone-repo
+    workspaces:
+    - name: shared-workspace
+      workspace: pipeline-workspace
+```
 ```bash
-# View pipelines and runs
-tkn pipeline list
-tkn pipelinerun logs -f my-pipelinerun-xyz
+oc apply -f pipeline.yaml
+```
+
+### Step 4: Run the Pipeline using a PipelineRun
+Create a local PersistentVolumeClaim (PVC) to back the Workspace first:
+```yaml
+# workspace-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pipeline-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+```bash
+oc apply -f workspace-pvc.yaml
+```
+
+Run the pipeline:
+```yaml
+# pipelinerun.yaml
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: run-1
+spec:
+  pipelineRef:
+    name: build-pipeline
+  workspaces:
+  - name: pipeline-workspace
+    persistentVolumeClaim:
+      claimName: pipeline-pvc
+```
+```bash
+oc apply -f pipelinerun.yaml
+```
+
+### Step 5: Verify Progress
+Use the Tekton CLI tool `tkn` to watch execution:
+```bash
+tkn pipelinerun logs -f run-1
 ```
 
 ---
 
 ## Related Notes
-- [[OpenShift-Pipelines-Tekton]] — Pipelines deep-dive
-- [[Source-to-Image-S2I]] — Advanced builder images
-- [[Helm]] — Helm charts workflows
-- [[EX288-OpenShift-Developer]] — Exam study guide
-- [[OpenShift-Developer-Path]] — MOC
+- [OpenShift-Pipelines-Tekton](../CI-CD/OpenShift-Pipelines-Tekton.md) — Pipelines deep-dive
+- [Source-to-Image-S2I](../CI-CD/Source-to-Image-S2I.md) — Advanced builder images
+- [Helm](../../03-Kubernetes-Fundamentals/Helm.md) — Helm charts workflows
+- [EX288-OpenShift-Developer](../../11-Certifications/EX288-OpenShift-Developer.md) — Exam study guide
+- [OpenShift-Developer-Path](../../01-Learning-Paths/OpenShift-Developer-Path.md) — MOC

@@ -24,10 +24,10 @@ created: 2025-07-08
 | **Code** | DO180 |
 | **Duration** | 5 days (40 hours) |
 | **Format** | Classroom, Virtual, Self-paced |
-| **Prerequisites** | [[RH124-System-Administration-I]] or equivalent Linux experience |
-| **Next Step** | [[DO280-OpenShift-Administration-II]] |
-| **Certification** | Maps directly to [[EX180-Containers-Kubernetes]] |
-| **Learning Path** | [[OpenShift-Administrator-Path]] |
+| **Prerequisites** | [RH124-System-Administration-I](../../04-RHEL/Courses/RH124-System-Administration-I.md) or equivalent Linux experience |
+| **Next Step** | [DO280-OpenShift-Administration-II](DO280-OpenShift-Administration-II.md) |
+| **Certification** | Maps directly to [EX180-Containers-Kubernetes](../../11-Certifications/EX180-Containers-Kubernetes.md) |
+| **Learning Path** | [OpenShift-Administrator-Path](../../01-Learning-Paths/OpenShift-Administrator-Path.md) |
 
 ## Learning Objectives
 
@@ -48,8 +48,8 @@ After completing this course, you will be able to:
 
 ### Monolithic vs Microservices Architecture
 
-- **Monolith:** All functionality built into a single deployable unit. Scaling is resource-intensive. Single point of failure.
-- **Microservices:** Applications decomposed into small, independent services communicating over APIs. Easy scaling, technology flexibility, and fast deployment.
+- **Monolith:** All functionality built into a single deployable unit. Scaling requires duplicating the entire application. Single point of failure: a bug in one component can crash the entire system.
+- **Microservices:** Applications decomposed into small, independent services communicating over lightweight APIs (HTTP/REST or gRPC). Easy scaling (only scale bottleneck services), technology flexibility, and independent deployment cycles.
 
 ### Containerization vs Virtualization
 
@@ -68,44 +68,96 @@ After completing this course, you will be able to:
 └───────────────────────────────────┘      └───────────────────────────────────┘
 ```
 
-- **Hypervisors** virtualize the hardware layer. Each VM requires its own full Guest OS kernel, memory, and CPU overhead.
-- **Containers** share the host Linux kernel. They are lightweight, start in milliseconds, and utilize only the necessary library binaries.
+- **Hypervisors** virtualize the hardware layer. Each VM requires its own full Guest OS kernel, memory allocation, and CPU overhead.
+- **Containers** share the host Linux kernel. They leverage host kernel isolation features, are lightweight, start in milliseconds, and utilize only the necessary library binaries.
 
-### Open Container Initiative (OCI)
+### Under the Hood: Linux Kernel Isolation
+Containers are not actual physical objects; they are standard Linux processes isolated using:
+1. **Namespaces:** Restrict what a process can *see*:
+   - `pid`: Process IDs (isolates process tree)
+   - `net`: Network devices, routing tables, ports
+   - `mnt`: Mount points (isolates filesystem root)
+   - `ipc`: Inter-process communication resources
+   - `uts`: Hostname and NIS domain name
+   - `user`: User and group IDs (map container root to unprivileged host UID)
+2. **Control Groups (cgroups):** Restrict what a process can *use* (CPU, Memory, Disk I/O, Network bandwidth).
+3. **SELinux:** Restricts what a process can *do* (enforces mandatory access controls on host resources).
 
-The OCI defines industry standards for container formats and runtimes:
-- **OCI Image Specification:** Defines how an image is packaged (layers, metadata).
-- **OCI Runtime Specification:** Defines how to unpack and execute a container (e.g., runc, crun).
+### Open Container Initiative (OCI) & CRI-O
+The OCI defines industry standards:
+- **OCI Image Specification:** Defines how an image is packaged (layers, configuration JSON).
+- **OCI Runtime Specification:** Defines how to unpack and execute a container (e.g., `runc`, `crun`).
+- **CRI-O:** A lightweight Container Runtime Interface (CRI) implementation designed specifically for Kubernetes. It bypasses Docker daemon overhead, launching OCI-compliant containers directly via low-level runtimes (like `crun`).
 
 ---
 
 ## Module 2: Creating Containerized Services
 
-This module builds on the foundational Podman commands covered in [[RH134-System-Administration-II#Module-11-Running-Containers-with-Podman|RH134 Module 11]].
+This module builds on the foundational Podman commands covered in [RH134 Module 11](../../04-RHEL/Courses/RH134-System-Administration-II.md#module-11-running-containers-with-podman).
 
-### Container registries
-Container registries store and distribute container images:
-- Red Hat Ecosystem: `registry.access.redhat.com` (public catalog) and `registry.redhat.io` (authenticated gateway)
-- Public Hubs: `quay.io`, `docker.io`
+### Step-by-Step Image Building
+To package an application, write a `Containerfile` (or `Dockerfile`):
 
+```dockerfile
+# 1. Base Image
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4
+
+# 2. Environment variables
+ENV PORT=8080
+ENV APP_ROOT=/opt/app
+
+# 3. Setup work directory
+WORKDIR ${APP_ROOT}
+
+# 4. Install dependencies and clean cache to minimize image size
+RUN microdnf install -y python3-pip && microdnf clean all
+
+# 5. Copy dependencies list and install
+COPY requirements.txt ./
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# 6. Copy application code
+COPY app.py ./
+
+# 7. Document the port the container listens on
+EXPOSE ${PORT}
+
+# 8. Specify default executable command
+CMD ["python3", "app.py"]
+```
+
+Build and run commands:
 ```bash
-# Log in to an authenticated registry
-podman login registry.redhat.io
+# Build the image locally
+podman build -t my-python-app:1.0 .
+
+# List local images
+podman images
+
+# Run the container in the background, mapping port 8080
+podman run -d --name test-app -p 8080:8080 my-python-app:1.0
+
+# Inspect logs
+podman logs test-app
+
+# Clean up container
+podman stop test-app
+podman rm test-app
 ```
 
 ### Multi-Container Network Management
 
 ```bash
-# Create a local OCI network
+# Create a local user-defined bridge network (enables DNS name resolution)
 podman network create app-net
 
-# Run a database in the network
+# Run database container inside the network
 podman run -d --name db --network app-net \
   -e MYSQL_ROOT_PASSWORD=redhat \
   -e MYSQL_DATABASE=items \
-  docker.io/library/mariadb:latest
+  docker.io/library/mariadb:10.11
 
-# Run a web application connecting to the database container name
+# Run web app connecting to the database using its container name as hostname
 podman run -d --name web --network app-net -p 8080:8080 \
   -e DB_HOST=db \
   -e DB_USER=root \
@@ -119,14 +171,10 @@ podman run -d --name web --network app-net -p 8080:8080 \
 ## Module 3: Introduction to Kubernetes and OpenShift
 
 ### What is Kubernetes (K8s)?
-An open-source platform for automating deployment, scaling, and operations of application containers. It handles:
-- Service discovery and load balancing
-- Storage orchestration
-- Automated rollouts and rollbacks
-- Self-healing
+An open-source orchestration system for containerized applications. Its core control loop matches the **Actual State** of the cluster with the **Desired State** defined in YAML manifests. It manages scheduling, self-healing, replication, and service discovery.
 
 ### What is Red Hat OpenShift Container Platform (OCP)?
-An enterprise-ready Kubernetes platform built on Red Hat Enterprise Linux CoreOS (RHCOS). It adds comprehensive developer and operations tools:
+An enterprise-ready Kubernetes platform built on Red Hat Enterprise Linux CoreOS (RHCOS) with built-in operational and developer features:
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -142,230 +190,287 @@ An enterprise-ready Kubernetes platform built on Red Hat Enterprise Linux CoreOS
 └────────────────────────────────────────────────────────┘
 ```
 
-- **Enterprise Security:** Default-deny cluster settings, strict Security Context Constraints (SCCs).
-- **Integrated Registry:** Auto-build and store images directly inside the cluster.
-- **Routes:** Out-of-the-box Ingress routing mapping external hostnames to internal services.
-- **Pipelines & GitOps:** Native integrations with Tekton and Argo CD.
+- **Enterprise Security by Default:** Enforces strict Security Context Constraints (SCC) preventing containers from running as root unless explicitly configured.
+- **Out-of-the-Box Ingress:** Integrated Router (HAProxy) handles ingress URLs (Routes) automatically without manually configuring external load balancers.
+- **S2I (Source-to-Image):** Automatically converts application source code repositories into container images inside the cluster.
 
 ---
 
 ## Module 4: Deploying Applications to OpenShift
 
-### Logging in and Command Line Navigation
+### Authentication & Project Context
 
 ```bash
-# Log in to an OpenShift cluster API
-oc login -u developer -p developer https://api.sandbox.openshift.com:6443
+# Log in using the API server URL
+oc login -u developer -p developer https://api.sandbox-m2.ll9k.p1.openshiftapps.com:6443
 
-# Show current connection context
+# Check current active context
 oc whoami
-oc project                            # Show active namespace / project
+oc project
 
-# Create a new project
-oc new-project my-app-dev
-
-# Switch projects
-oc project default
+# Create a new isolated workspace (Project)
+oc new-project dev-sandbox
 ```
 
-### Resource Types in OpenShift
+### Complete YAML Manifest Examples
 
-| Resource | Short Name | Purpose |
-|---|---|---|
-| `Pod` | `po` | The smallest deployable unit (one or more containers) |
-| `Service` | `svc` | Stable internal IP and load balancer for Pods |
-| `Route` | `route` | Exposes a Service externally (DNS route) |
-| `Deployment` | `deploy` | Manages Pod replication and update rollouts |
-| `DeploymentConfig` | `dc` | Legacy OpenShift-specific Deployment with triggers |
-| `ImageStream` | `is` | Tracks and references container images |
+#### 1. Pod Manifest (`pod.yaml`)
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-pod
+  labels:
+    app: hello
+spec:
+  containers:
+  - name: hello-container
+    image: registry.access.redhat.com/ubi9/nginx-120
+    ports:
+    - containerPort: 8080
+```
 
-### Creating Workloads via CLI
+#### 2. Service Manifest (`service.yaml`)
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-svc
+spec:
+  selector:
+    app: hello
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: ClusterIP
+```
 
+#### 3. Route Manifest (`route.yaml`)
+```yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hello-route
+spec:
+  to:
+    kind: Service
+    name: hello-svc
+  port:
+    targetPort: 8080
+```
+
+Deploying these manifests:
 ```bash
-# Method 1: Build from Source-to-Image (S2I)
-oc new-app https://github.com/sclorg/django-ex.git --name=my-django
+oc apply -f pod.yaml
+oc apply -f service.yaml
+oc apply -f route.yaml
 
-# Method 2: Deploy directly from an image
-oc create deployment webserver --image=registry.access.redhat.com/ubi9/nginx-120
-
-# View deployment progress
-oc rollout status deployment/webserver
+# Check generated public route URL
+oc get route hello-route
 ```
 
 ---
 
-## Module 5: Managing Workloads on OpenShift
+## Module 5: Managing Workloads and Troubleshooting
 
-### Inspecting Resources
+### CLI Diagnostics Cheat Sheet
 
 ```bash
-# Get resource summaries
+# Get summary of all running pods
 oc get pods
-oc get services
-oc get routes
 
-# Detailed structural inspect (YAML format)
-oc get pod/webserver-7c98f869-abc12 -o yaml
+# Stream logs of a deployment
+oc logs deployment/webserver --tail=100 -f
 
-# Describe resource events and operational history
-oc describe pod/webserver-7c98f869-abc12
+# Describe resource detailed status and historical events
+oc describe pod/hello-pod
 
-# Stream container logs
-oc logs deployment/webserver
-oc logs -f deployment/webserver --tail=50
+# Run interactive terminal shell inside a pod
+oc rsh pod/hello-pod
 
-# Exec into a running container
-oc rsh deployment/webserver
-# or
-oc exec -it deployment/webserver -- /bin/bash
+# Copy files to/from a pod
+oc cp ./config.conf hello-pod:/tmp/config.conf
 ```
 
-### Exposing Services Externally (Routes)
+### Troubleshooting Workload Errors
 
-```bash
-# 1. Create internal Service (exposing port 80 of target containers)
-oc expose deployment/webserver --port=80 --target-port=80
+#### 1. `CrashLoopBackOff`
+- **What it means:** The container started, but repeatedly exited or crashed.
+- **Common causes:** Incorrect startup command (`CMD` or `ENTRYPOINT`), missing required environment variables, or application throwing an unhandled exception.
+- **How to debug:**
+  ```bash
+  # Step 1: Check standard logs (even if terminated)
+  oc logs pod-name --previous
+  
+  # Step 2: Describe the pod events to see exit codes
+  oc describe pod pod-name
+  ```
 
-# 2. Expose the Service to the public via a Route
-oc expose service/webserver --hostname=web.apps.mycluster.example.com
-
-# 3. View the generated Route
-oc get route webserver
-```
+#### 2. `ImagePullBackOff` / `ErrImagePull`
+- **What it means:** The node running the pod cannot fetch the container image from the registry.
+- **Common causes:** Typo in image name or tag, image is private and no registry pull secret is configured.
+- **How to debug:**
+  ```bash
+  # Step 1: Check pod events to see the exact registry error
+  oc describe pod pod-name
+  
+  # Step 2: Create a secret with registry credentials if required
+  oc create secret docker-registry registry-pull-secret \
+    --docker-server=registry.redhat.io \
+    --docker-username=my-user \
+    --docker-password=my-password
+  
+  # Step 3: Link secret to default service account for automatic pull
+  oc secrets link default registry-pull-secret --for=pull
+  ```
 
 ---
 
 ## Module 6: Application Configuration
 
-### ConfigMaps (Non-sensitive Config)
+### ConfigMaps
 
 ```bash
-# Create ConfigMap from literal values
-oc create configmap app-config --from-literal=DB_PORT=3306 --from-literal=APP_DEBUG=true
+# Create ConfigMap from command line literal values
+oc create configmap db-config --from-literal=DB_PORT=3306 --from-literal=DB_NAME=prod
 
-# Inject ConfigMap as environment variables in a deployment
-oc set env deployment/webserver --from=configmap/app-config
-
-# Mount ConfigMap as a file path inside a container
-oc set volume deployment/webserver --add \
-  --name=config-vol \
-  --mount-path=/etc/config \
-  --configmap-name=app-config
+# Inject ConfigMap keys as Environment Variables inside a Deployment template:
+# (Inside deployment.spec.template.spec.containers[0])
+envFrom:
+- configMapRef:
+    name: db-config
 ```
 
-### Secrets (Sensitive Data)
+### Secrets
 
 ```bash
-# Create Secret from literal values
-oc create secret generic db-credentials --from-literal=password=redhat123
+# Create Generic Secret
+oc create secret generic db-credentials --from-literal=password=supersecretpassword
 
-# Inject Secret into deployment as environment variables
-oc set env deployment/webserver --from=secret/db-credentials
+# Mount Secret as file path inside a container:
+# (Inside deployment.spec.template.spec.containers[0].volumeMounts)
+volumeMounts:
+- name: credentials-volume
+  mountPath: "/etc/secrets"
+  readOnly: true
 
-# Verify
-oc get secrets
-oc extract secret/db-credentials --to=-  # Decrypt and view output
+# (Inside deployment.spec.template.spec.volumes)
+volumes:
+- name: credentials-volume
+  secret:
+    secretName: db-credentials
 ```
 
 ---
 
 ## Module 7: Application Reliability & Self-Healing
 
-### Health Probes (Liveness, Readiness, Startup)
+```
+            Client Request
+                 │
+                 ▼
+         ┌───────────────┐
+         │  Service IP   │
+         └───────┬───────┘
+                 │
+      Readiness check OK?
+        ┌────────┴────────┐
+        ▼ Yes             ▼ No (Removed from Service)
+ ┌───────────────┐  ┌───────────────┐
+ │   Pod (Live)  │  │ Pod (Booting) │
+ └───────────────┘  └───────────────┘
+```
 
-- **Startup Probe:** Checks if the application within the container has started. All other probes are disabled until this succeeds.
-- **Liveness Probe:** Checks if the container needs to be restarted. If this fails, OpenShift kills the Pod and creates a new one.
-- **Readiness Probe:** Checks if the container is ready to accept incoming traffic. If this fails, the Pod is removed from the Service load balancer.
+- **Startup Probe:** Disables other probes until the container finishes booting up.
+- **Liveness Probe:** Monitored continuously. If it fails, OpenShift restarts the container.
+- **Readiness Probe:** Monitored continuously. If it fails, traffic is diverted away from this container's endpoint.
 
 ```yaml
-# Configuration example inside a Deployment manifest:
+# Spec config block inside a Deployment:
 spec:
   containers:
-  - name: myweb
-    image: registry.access.redhat.com/ubi9/httpd-24
+  - name: web
+    image: registry.access.redhat.com/ubi9/nginx-120
     livenessProbe:
       httpGet:
         path: /healthz
         port: 8080
-      initialDelaySeconds: 15
-      periodSeconds: 10
+      initialDelaySeconds: 10
+      periodSeconds: 15
     readinessProbe:
-      exec:
-        command:
-        - /usr/bin/mysqladmin
-        - ping
+      tcpSocket:
+        port: 8080
       initialDelaySeconds: 5
-      periodSeconds: 5
-```
-
-### Setting Probes via CLI
-
-```bash
-# Set a liveness probe on a deployment
-oc set probe deployment/webserver --liveness \
-  --get-url=http://:8080/healthz --initial-delay-seconds=10
-
-# Set a readiness probe
-oc set probe deployment/webserver --readiness \
-  --get-url=http://:8080/ready --period-seconds=5
+      periodSeconds: 10
 ```
 
 ---
 
 ## Module 8: Resource Limits & Application Scaling
 
-### CPU & Memory Requests and Limits
-
-- **Request:** The minimum resources guaranteed to a container. The scheduler uses this to find a node.
-- **Limit:** The maximum resources a container is allowed to consume. CPU is throttled if exceeded; Memory causes Out-Of-Memory (OOM) termination if exceeded.
+### Resource Requests vs. Limits
+- **Requests:** CPU/Memory guaranteed to the container. Used by scheduler for resource allocation.
+- **Limits:** Hard ceiling on resources. If a container exceeds memory limit, it is terminated (`OOMKilled`). If it exceeds CPU limit, it is throttled.
 
 ```bash
-# Set requests and limits on a deployment
-oc set resources deployment/webserver --requests=cpu=200m,memory=512Mi --limits=cpu=400m,memory=1Gi
+# Apply compute resource constraints to deployment
+oc set resources deployment/webserver --requests=cpu=100m,memory=256Mi --limits=cpu=200m,memory=512Mi
 ```
 
-### Manual Scaling
-
+### Scaling Workloads
 ```bash
-# Scale to 3 replicas
-oc scale deployment/webserver --replicas=3
+# Manual Scale
+oc scale deployment/webserver --replicas=4
 
-# Scale down
-oc scale deployment/webserver --replicas=1
+# Define Horizontal Pod Autoscaler (HPA) to scale between 2 and 10 pods based on 80% CPU usage
+oc autoscale deployment/webserver --min=2 --max=10 --cpu-percent=80
 ```
 
 ---
 
 ## Practice Exercise: Deploying a Self-Healing Application
 
-```bash
-# 1. Create a project
-oc new-project test-probes
+Follow these steps to deploy and debug a self-healing application:
 
-# 2. Deploy a webserver
-oc create deployment app --image=registry.access.redhat.com/ubi9/httpd-24
-
-# 3. Set a liveness probe that points to a non-existent path
-oc set probe deployment/app --liveness --get-url=http://:8080/bad-path
-
-# 4. Monitor the Pod events — notice the restart loop
-oc get pods -w
-oc describe pod -l app=app
-
-# 5. Correct the probe to a valid path
-oc set probe deployment/app --liveness --remove
-oc set probe deployment/app --liveness --get-url=http://:8080/
-
-# 6. Verify the Pod stabilizes
-oc get pods
-```
+1. **Create project:**
+   ```bash
+   oc new-project test-healing
+   ```
+2. **Deploy NGINX deployment:**
+   ```bash
+   oc create deployment app-test --image=registry.access.redhat.com/ubi9/nginx-120
+   ```
+3. **Configure Liveness Probe to a non-existent port (simulating failure):**
+   ```bash
+   oc set probe deployment/app-test --liveness --get-url=http://:9999/healthz --initial-delay-seconds=5
+   ```
+4. **Watch container restarts in real time:**
+   ```bash
+   oc get pods -w
+   ```
+   *Observe the container restarts increase as the liveness probe repeatedly fails.*
+5. **Inspect the logs and events:**
+   ```bash
+   oc describe pod -l app=app-test
+   ```
+   *Look at the bottom Events log to see: "Liveness probe failed: Get "http://:9999/healthz": dial tcp: connection refused".*
+6. **Correct the probe setting to target NGINX default HTTP port (8080):**
+   ```bash
+   oc set probe deployment/app-test --liveness --remove
+   oc set probe deployment/app-test --liveness --get-url=http://:8080/ --initial-delay-seconds=5
+   ```
+7. **Verify the container stabilizes and restarts stop incrementing:**
+   ```bash
+   oc get pods
+   ```
 
 ---
 
 ## Related Notes
 
-- [[Deployments-and-DeploymentConfigs]] — Detail on rollout strategies
-- [[RBAC]] — Identity management and permissions on OCP
-- [[Core-Concepts]] — Underlying Kubernetes architecture
-- [[EX180-Containers-Kubernetes]] — Exam study guide
-- [[OpenShift-Administrator-Path]] — Learning path MOC
+- [Deployments-and-DeploymentConfigs](../Workloads/Deployments-and-DeploymentConfigs.md) — Detail on rollout strategies
+- [RBAC](../Security/RBAC.md) — Identity management and permissions on OCP
+- [Core-Concepts](../../03-Kubernetes-Fundamentals/Core-Concepts.md) — Underlying Kubernetes architecture
+- [EX180-Containers-Kubernetes](../../11-Certifications/EX180-Containers-Kubernetes.md) — Exam study guide
+- [OpenShift-Administrator-Path](../../01-Learning-Paths/OpenShift-Administrator-Path.md) — Learning path MOC
