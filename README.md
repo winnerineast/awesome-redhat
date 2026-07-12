@@ -23,6 +23,37 @@ git clone https://github.com/winnerineast/awesome-redhat.git
 # 3. Start at the Dashboard: [00-Home/Dashboard.md](00-Home/Dashboard.md)
 ```
 
+### Option 2: Run the OpenShift Sizing Calculator & Discovery Chatbot (Local Tool)
+This vault contains an interactive architectural sizing calculator and discovery chatbot powered by a local Ollama model (Qwen).
+
+1. **Prerequisites**:
+   - Python 3 installed.
+   - [Ollama](https://ollama.com/) installed and running locally.
+2. **Start Ollama with CORS origins enabled** (required for the browser to communicate with the model):
+   - **Windows (PowerShell)**:
+     ```powershell
+     $env:OLLAMA_ORIGINS="*" ; ollama serve
+     ```
+   - **macOS / Linux**:
+     ```bash
+     OLLAMA_ORIGINS="*" ollama serve
+     ```
+3. **Download/run the model**:
+   ```bash
+   ollama run qwen
+   ```
+4. **Launch the Sizing Web App**:
+   - Navigate to the tool directory:
+     ```bash
+     cd Tools/Resource-Calculator
+     ```
+   - Start the local HTTP server:
+     ```bash
+     python -m http.server 8000
+     ```
+   - Open your browser and go to: `http://localhost:8000`
+5. **System Prompt Configuration**: Click the settings gear (`⚙️`) inside the chat panel header to dynamically customize prompt guidelines and question sets.
+
 ---
 
 ## 🗺️ Learning Paths & Local Course Index

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Hat OpenShift Hosting Architecture Compiler & AI Architect</title>
+    <meta name="description" content="Translate application hosting needs into standard Red Hat OpenShift Hosting Architecture Specifications.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Top Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <span class="redhat-dot"></span>
+                <h1>Red Hat OpenShift Architecture Compiler</h1>
+            </div>
+            
+            <!-- Quick Global Stats Ribbon -->
+            <div class="global-stats-ribbon" id="stats-ribbon">
+                <div class="stat-ribbon-item">
+                    <span class="ribbon-label">Total Cluster Nodes</span>
+                    <span class="ribbon-value" id="ribbon-nodes">3</span>
+                </div>
+                <div class="stat-ribbon-item">
+                    <span class="ribbon-label">Total vCores Required</span>
+                    <span class="ribbon-value" id="ribbon-cores">24.0</span>
+                </div>
+                <div class="stat-ribbon-item">
+                    <span class="ribbon-label">Total RAM Required</span>
+                    <span class="ribbon-value" id="ribbon-ram">96 GiB</span>
+                </div>
+                <div class="stat-ribbon-item">
+                    <span class="ribbon-label">Projected Raw Storage</span>
+                    <span class="ribbon-value" id="ribbon-storage">1.2 TiB</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+            <!-- Left Panel: Application Hosting Needs Inputs -->
+            <section class="panel-left card-glass">
+                <h2 class="section-title">1. Application Hosting Needs</h2>
+                
+                <!-- Preset Workloads Section -->
+                <div class="form-group">
+                    <label for="workload-preset">Application Profile</label>
+                    <select id="workload-preset" class="select-field">
+                        <option value="web">Standard Web / Microservice (Balanced)</option>
+                        <option value="db">Database & Caching (RAM Heavy)</option>
+                        <option value="ai">AI/ML & Analytics (Compute Heavy)</option>
+                        <option value="custom" selected>Custom Configuration</option>
+                    </select>
+                </div>
+
+                <!-- Sliders for Workload Sizing -->
+                <fieldset class="fieldset-group">
+                    <legend>Workload Metrics</legend>
+                    
+                    <div class="slider-group">
+                        <div class="slider-labels">
+                            <span class="slider-name">Active Application Replicas (Pods)</span>
+                            <span class="slider-val" id="val-replicas">10</span>
+                        </div>
+                        <input type="range" id="input-replicas" min="1" max="500" value="10" class="slider-field">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-labels">
+                            <span class="slider-name">CPU Request per Pod (vCores)</span>
+                            <span class="slider-val" id="val-cpu">0.5</span>
+                        </div>
+                        <input type="range" id="input-cpu" min="0.1" max="16" step="0.1" value="0.5" class="slider-field">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-labels">
+                            <span class="slider-name">Memory Request per Pod (GiB)</span>
+                            <span class="slider-val" id="val-ram">1.0</span>
+                        </div>
+                        <input type="range" id="input-ram" min="0.25" max="64" step="0.25" value="1" class="slider-field">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-labels">
+                            <span class="slider-name">Active Storage PVC per Pod (GiB)</span>
+                            <span class="slider-val" id="val-pvc">20</span>
+                        </div>
+                        <input type="range" id="input-pvc" min="0" max="1000" step="10" value="20" class="slider-field">
+                    </div>
+
+                    <!-- OpenShift Virtualization VMs Slider -->
+                    <div class="slider-group">
+                        <div class="slider-labels">
+                            <span class="slider-name">OpenShift Virtualization VMs</span>
+                            <span class="slider-val" id="val-vms">0</span>
+                        </div>
+                        <input type="range" id="input-vms" min="0" max="100" step="1" value="0" class="slider-field">
+                    </div>
+                </fieldset>
+
+                <!-- Infrastructure Model (ROSA/ARO vs Baremetal) -->
+                <div class="form-group">
+                    <label for="infra-model">Hosting Infrastructure Model</label>
+                    <select id="infra-model" class="select-field">
+                        <option value="baremetal">Self-Managed Bare-Metal Datacenter</option>
+                        <option value="virtualized">Self-Managed Virtualized (VMware/Nutanix)</option>
+                        <option value="cloud-self">Public Cloud Self-Managed (IPI/UPI on AWS/Azure)</option>
+                        <option value="cloud-managed" selected>Public Cloud Fully Managed (ROSA / ARO)</option>
+                    </select>
+                </div>
+
+                <!-- Security & Network Zone Topology -->
+                <fieldset class="fieldset-group">
+                    <legend>Network Security Zones</legend>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-zone-dmz" class="checkbox-field">
+                        <label for="input-zone-dmz">Public DMZ Zone (External Ingress / Internet)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-zone-intranet" checked class="checkbox-field">
+                        <label for="input-zone-intranet">Secure Intranet Zone (Private VPC / VPN)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-zone-airgap" class="checkbox-field">
+                        <label for="input-zone-airgap">Airgapped Local Zone (On-Premises / Disconnected)</label>
+                    </div>
+                </fieldset>
+
+                <!-- DevSecOps & Platform Services Checklist -->
+                <fieldset class="fieldset-group">
+                    <legend>Platform Services & Security</legend>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-service-mesh" class="checkbox-field">
+                        <label for="input-service-mesh">OpenShift Service Mesh (Istio mTLS)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-sec-pipelines" class="checkbox-field">
+                        <label for="input-sec-pipelines">OpenShift Pipelines (Tekton CI Builds)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-sec-kafka" class="checkbox-field">
+                        <label for="input-sec-kafka">AMQ Streams (Kafka Event Broker)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-sec-gateway" class="checkbox-field">
+                        <label for="input-sec-gateway">Red Hat 3scale API Gateway</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-sec-acs" checked class="checkbox-field">
+                        <label for="input-sec-acs">Advanced Cluster Security (ACS StackRox)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-sec-compliance" class="checkbox-field">
+                        <label for="input-sec-compliance">Compliance Operator CIS Scanning</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-sec-gitops" checked class="checkbox-field">
+                        <label for="input-sec-gitops">OpenShift GitOps (ArgoCD reconciliation)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-sec-aap" class="checkbox-field">
+                        <label for="input-sec-aap">Ansible Automation Platform (AAP)</label>
+                    </div>
+                </fieldset>
+
+                <!-- Concurrent Build Tasks Slider (Only shown if Tekton Pipelines checked) -->
+                <div class="slider-group custom-hidden" id="concurrent-builds-container">
+                    <div class="slider-labels">
+                        <span class="slider-name">Concurrent CI Build Tasks</span>
+                        <span class="slider-val" id="val-concurrent-builds">2</span>
+                    </div>
+                    <input type="range" id="input-concurrent-builds" min="1" max="10" step="1" value="2" class="slider-field">
+                </div>
+
+                <!-- Event Throughput Slider (Only shown if AMQ Streams checked) -->
+                <div class="slider-group custom-hidden" id="kafka-throughput-container">
+                    <div class="slider-labels">
+                        <span class="slider-name">Event Throughput (msgs/sec)</span>
+                        <span class="slider-val" id="val-kafka-throughput">10000</span>
+                    </div>
+                    <input type="range" id="input-kafka-throughput" min="10000" max="100000" step="10000" value="10000" class="slider-field">
+                </div>
+
+                <!-- High Availability & DR Levels -->
+                <div class="form-group">
+                    <label for="availability-sla">HA & Redundancy Level</label>
+                    <select id="availability-sla" class="select-field">
+                        <option value="sno">Single Zone (SNO - Single Node OpenShift)</option>
+                        <option value="ha-single">Single Region (HA Multi-AZ Stretch Cluster)</option>
+                        <option value="ha-dr-ap" selected>Regional Redundancy (Active-Passive Standby)</option>
+                        <option value="ha-dr-aa">Regional Redundancy (Active-Active Sync DR)</option>
+                    </select>
+                </div>
+
+                <!-- DR Standby Compute Capacity (Only shown for Active-Passive) -->
+                <div class="slider-group" id="standby-capacity-container">
+                    <div class="slider-labels">
+                        <span class="slider-name">DR Standby Compute Capacity (%)</span>
+                        <span class="slider-val" id="val-standby-capacity">30</span>
+                    </div>
+                    <input type="range" id="input-standby-capacity" min="10" max="100" step="10" value="30" class="slider-field">
+                </div>
+
+                <!-- Disaster Recovery SLAs -->
+                <div class="form-group">
+                    <label for="recovery-sla">Disaster Recovery SLA (RTO/RPO)</label>
+                    <select id="recovery-sla" class="select-field">
+                        <option value="oadp">Basic Backup (OADP) [RTO < 24h, RPO < 24h]</option>
+                        <option value="async" selected>Regional Async DR [RTO < 30m, RPO < 15m]</option>
+                        <option value="sync">Metro Sync DR [RTO < 1m, RPO ~ 0]</option>
+                    </select>
+                </div>
+
+                <!-- Storage Projections and Retention -->
+                <fieldset class="fieldset-group">
+                    <legend>Data Retention & Backup</legend>
+                    
+                    <div class="slider-group">
+                        <div class="slider-labels">
+                            <span class="slider-name">Daily New Data Growth Rate (GiB/day)</span>
+                            <span class="slider-val" id="val-growth">5</span>
+                        </div>
+                        <input type="range" id="input-growth" min="0" max="100" step="1" value="5" class="slider-field">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-labels">
+                            <span class="slider-name">Retention Window (Months)</span>
+                            <span class="slider-val" id="val-retention">12</span>
+                        </div>
+                        <input type="range" id="input-retention" min="1" max="60" step="1" value="12" class="slider-field">
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="input-backup" checked class="checkbox-field">
+                        <label for="input-backup">Include Backup Snapshot Overhead (+20%)</label>
+                    </div>
+                </fieldset>
+
+                <!-- Node Hardware Profiles -->
+                <div class="form-group">
+                    <label for="node-profile">Worker Node Instance Profile</label>
+                    <select id="node-profile" class="select-field">
+                        <option value="aws-xl">AWS m5.xlarge (4 vCPUs, 16 GiB RAM)</option>
+                        <option value="aws-2xl" selected>AWS m5.2xlarge (8 vCPUs, 32 GiB RAM)</option>
+                        <option value="baremetal">Bare-Metal Compute Node (32 vCPUs, 128 GiB RAM)</option>
+                        <option value="custom">Custom Node Sizing</option>
+                    </select>
+                </div>
+
+                <!-- Custom Node Sizing (Hidden unless Custom node selected) -->
+                <div id="custom-node-size-container" class="fieldset-group custom-hidden">
+                    <legend>Custom Node Capacity</legend>
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <div style="flex: 1;">
+                            <label for="custom-node-cpu" style="font-size: 0.8rem; margin-bottom: 5px;">Node vCPUs</label>
+                            <input type="number" id="custom-node-cpu" min="1" max="128" value="8" class="select-field" style="padding: 6px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="custom-node-ram" style="font-size: 0.8rem; margin-bottom: 5px;">Node RAM (GiB)</label>
+                            <input type="number" id="custom-node-ram" min="2" max="1024" value="32" class="select-field" style="padding: 6px;">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Architectural Specs, Infrastructure Cards & Visuals -->
+            <section class="panel-right">
+                
+                <!-- Central Panel: Red Hat OpenShift Hosting Architecture Specification -->
+                <div class="compiled-spec-container card-glass border-spec">
+                    <h3 class="container-title">Red Hat OpenShift Hosting Architecture Specification</h3>
+                    <div class="spec-grid">
+                        <div class="spec-item">
+                            <span class="spec-label">Cluster Topology Pattern</span>
+                            <div class="spec-badge-wrapper">
+                                <span class="spec-badge badge-topology" id="spec-topology">Multi-Cluster ACM Managed</span>
+                            </div>
+                            <p class="spec-desc" id="spec-topology-desc">Replicated active and standby nodes split across regions with global cluster federation controls.</p>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Storage Topology Class</span>
+                            <div class="spec-badge-wrapper">
+                                <span class="spec-badge badge-storage" id="spec-storage">ODF Regional Async Mirroring</span>
+                            </div>
+                            <p class="spec-desc" id="spec-storage-desc">Asynchronous data replication across distant geographies to protect against site failure.</p>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Network Security Profile</span>
+                            <div class="spec-badge-wrapper">
+                                <span class="spec-badge badge-security" id="spec-security">VPC Private Intranet (Multus)</span>
+                            </div>
+                            <p class="spec-desc" id="spec-security-desc">Private network isolation using macvlan attachments and strict security segmentations.</p>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Recovery & Backup Strategy</span>
+                            <div class="spec-badge-wrapper">
+                                <span class="spec-badge badge-recovery" id="spec-recovery">OADP Object Store Snapshots</span>
+                            </div>
+                            <p class="spec-desc" id="spec-recovery-desc">Backup scheduling using velero and OADP to push snapshot volumes into external S3 storage.</p>
+                        </div>
+                        <!-- New Badge: Red Hat Stack Automation -->
+                        <div class="spec-item">
+                            <span class="spec-label">Red Hat Stack Automation</span>
+                            <div class="spec-badge-wrapper">
+                                <span class="spec-badge badge-automation" id="spec-automation">Not Configured</span>
+                            </div>
+                            <p class="spec-desc" id="spec-automation-desc">Day-2 automation configurations using playbooks, execution environments, and AAP automation controller.</p>
+                        </div>
+                        <!-- New Badge: DevSecOps Compliance -->
+                        <div class="spec-item">
+                            <span class="spec-label">DevSecOps Compliance Sizing</span>
+                            <div class="spec-badge-wrapper">
+                                <span class="spec-badge badge-devsecops" id="spec-devsecops">Standard Baseline</span>
+                            </div>
+                            <p class="spec-desc" id="spec-devsecops-desc">Runtime security scans with StackRox ACS collectors and CIS profiles from compliance operator.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stack Cascade Cards -->
+                <div class="cascade-cards-container">
+                    
+                    <!-- Level 3: App Pods -->
+                    <div class="cascade-card card-glass border-app">
+                        <div class="card-header">
+                            <span class="card-level">Level 3</span>
+                            <h3>Application Workload Pods</h3>
+                        </div>
+                        <div class="card-stats">
+                            <div class="card-stat-item">
+                                <span class="stat-name">Total Pod CPU (inc. mesh)</span>
+                                <span class="stat-val" id="app-cpu-total">5.0 Cores</span>
+                            </div>
+                            <div class="card-stat-item">
+                                <span class="stat-name">Total Pod RAM (inc. mesh)</span>
+                                <span class="stat-val" id="app-ram-total">10 GiB</span>
+                            </div>
+                            <div class="card-stat-item">
+                                <span class="stat-name">Active PVC Sum</span>
+                                <span class="stat-val" id="app-storage-total">200 GiB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Level 2: Platform Layer -->
+                    <div class="cascade-card card-glass border-platform">
+                        <div class="card-header">
+                            <span class="card-level">Level 2</span>
+                            <h3>OpenShift Container Platform</h3>
+                        </div>
+                        <div class="card-stats">
+                            <div class="card-stat-item">
+                                <span class="stat-name">Control Plane Nodes</span>
+                                <span class="stat-val" id="platform-cp-overhead">3 Nodes (24 vCPUs / 96GB)</span>
+                            </div>
+                            <div class="card-stat-item">
+                                <span class="stat-name">System Operator Overhead</span>
+                                <span class="stat-val" id="platform-sys-overhead">2.5 Cores / 12GiB</span>
+                            </div>
+                            <div class="card-stat-item">
+                                <span class="stat-name">Worker Nodes Required</span>
+                                <span class="stat-val" id="platform-worker-nodes">2 Nodes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Level 1: Infrastructure Layer -->
+                    <div class="cascade-card card-glass border-infra">
+                        <div class="card-header">
+                            <span class="card-level">Level 1</span>
+                            <h3>Physical / Cloud Infrastructure</h3>
+                        </div>
+                        <div class="card-stats">
+                            <div class="card-stat-item">
+                                <span class="stat-name">Total Primary VM Instances</span>
+                                <span class="stat-val" id="infra-instances">5 Instances</span>
+                            </div>
+                            <div class="card-stat-item">
+                                <span class="stat-name">Standby/DR VM Instances</span>
+                                <span class="stat-val" id="infra-instances-dr">3 Instances</span>
+                            </div>
+                            <div class="card-stat-item">
+                                <span class="stat-name">Projected Raw Storage</span>
+                                <span class="stat-val" id="infra-storage-projected">6.5 TiB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SVG Visualizer Schema (HA/DR lanes & Multi-VPC zones) -->
+                <div class="visualizer-container card-glass">
+                    <h3 class="container-title">Compiled OpenShift Infrastructure Schema</h3>
+                    <div class="svg-wrapper">
+                        <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" id="dependency-svg" width="100%" height="100%">
+                            <defs>
+                                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
+                                </marker>
+                                <linearGradient id="dmzGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="rgba(238, 0, 0, 0.15)" />
+                                    <stop offset="100%" stop-color="rgba(238, 0, 0, 0.03)" />
+                                </linearGradient>
+                                <linearGradient id="intranetGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="rgba(0, 173, 238, 0.15)" />
+                                    <stop offset="100%" stop-color="rgba(0, 173, 238, 0.03)" />
+                                </linearGradient>
+                                <linearGradient id="airgapGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="rgba(163, 0, 214, 0.15)" />
+                                    <stop offset="100%" stop-color="rgba(163, 0, 214, 0.03)" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Swimlanes for Security Zones -->
+                            <!-- Lane 1: Public DMZ -->
+                            <g id="lane-dmz">
+                                <rect x="5" y="5" width="790" height="95" rx="6" fill="url(#dmzGrad)" stroke="rgba(238, 0, 0, 0.2)" stroke-width="1" />
+                                <text x="15" y="25" fill="#EE0000" font-family="var(--font-stack)" font-weight="700" font-size="11" letter-spacing="0.5">ZONE A: PUBLIC DMZ (INTERNET INGRESS)</text>
+                            </g>
+
+                            <!-- Lane 2: Secure Intranet -->
+                            <g id="lane-intranet">
+                                <rect x="5" y="105" width="790" height="110" rx="6" fill="url(#intranetGrad)" stroke="rgba(0, 173, 238, 0.2)" stroke-width="1" />
+                                <text x="15" y="125" fill="#00ADEE" font-family="var(--font-stack)" font-weight="700" font-size="11" letter-spacing="0.5">ZONE B: PRIVATE INTRANET (SECURE VPC)</text>
+                            </g>
+
+                            <!-- Lane 3: Airgapped Local -->
+                            <g id="lane-airgap">
+                                <rect x="5" y="220" width="790" height="95" rx="6" fill="url(#airgapGrad)" stroke="rgba(163, 0, 214, 0.2)" stroke-width="1" />
+                                <text x="15" y="240" fill="#A300D6" font-family="var(--font-stack)" font-weight="700" font-size="11" letter-spacing="0.5">ZONE C: AIRGAPPED ON-PREMISES (DISCONNECTED)</text>
+                            </g>
+
+                            <!-- Region Dividers (Dotted vertical line if Multi-Region DR selected) -->
+                            <line x1="400" y1="5" x2="400" y2="315" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1.5" stroke-dasharray="5,5" id="region-divider" />
+                            <text x="390" y="20" fill="#777" font-family="var(--font-stack)" font-size="9" text-anchor="end" id="region-a-label">Primary Region A</text>
+                            <text x="410" y="20" fill="#777" font-family="var(--font-stack)" font-size="9" text-anchor="start" id="region-b-label">DR Region B</text>
+
+                            <!-- Dynamic SVG Nodes will be injected here by app.js -->
+                            <g id="svg-dynamic-elements">
+                                <!-- Placeholders for dynamically rendered nodes/pods -->
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Storage Growth Projection Graph -->
+                <div class="storage-chart-container card-glass">
+                    <h3 class="container-title">Data Storage Projections Over Retention Window</h3>
+                    <div class="chart-wrapper">
+                        <div class="chart-y-axis">
+                            <span id="chart-scale-max">10.0 TiB</span>
+                            <span id="chart-scale-mid">5.0 TiB</span>
+                            <span id="chart-scale-min">0.0 TiB</span>
+                        </div>
+                        <div class="chart-visual">
+                            <!-- Visual Columns -->
+                            <div class="chart-column">
+                                <div class="bar-container">
+                                    <div class="bar bar-base" id="bar-active-height" style="height: 20%;"></div>
+                                </div>
+                                <span class="bar-label">Active PVCs</span>
+                            </div>
+                            <div class="chart-column">
+                                <div class="bar-container">
+                                    <div class="bar bar-replicated" id="bar-replicated-height" style="height: 40%;"></div>
+                                </div>
+                                <span class="bar-label">Replicated Raw</span>
+                            </div>
+                            <div class="chart-column">
+                                <div class="bar-container">
+                                    <div class="bar bar-projected" id="bar-projected-height" style="height: 85%;"></div>
+                                </div>
+                                <span class="bar-label" id="label-projected-time">Projected (12 mos)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Floating Chatbot Widget (Bottom Center) -->
+        <div class="chat-widget-wrapper" id="chat-widget">
+            <!-- Expandable Chat Panel -->
+            <div class="chat-panel card-glass chat-collapsed" id="chat-panel">
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <span class="ollama-indicator" id="ollama-status-indicator"></span>
+                        <h4>Enterprise AI Architect</h4>
+                    </div>
+                    <!-- Dynamic Model Selector -->
+                    <select id="chat-model-select" class="select-field" style="padding: 2px 6px; font-size: 0.75rem; background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); width: 120px; margin-left: 10px;"></select>
+                    <!-- Settings Toggle Button -->
+                    <button class="btn-settings-chat" id="btn-settings-chat" title="Configure System Prompt" style="background: none; border: none; color: var(--text-secondary); font-size: 1rem; cursor: pointer; padding: 0 5px; margin-left: 8px;">⚙️</button>
+                    <button class="btn-close-chat" id="btn-close-chat" style="margin-left: 5px;">&times;</button>
+                </div>
+                
+                <!-- Chat Messages Body -->
+                <div class="chat-body" id="chat-body">
+                    <div class="chat-message system-msg">
+                        Hi! I am your <strong>Enterprise OpenShift Discovery Architect</strong>. Tell me about your application's characteristics and hosting requirements. I will configure the hosting specification and guide you through targeted architectural discovery questions.
+                    </div>
+                </div>
+
+                <!-- Chat Settings Body (Prompt Configurator) -->
+                <div class="chat-settings-body custom-hidden" id="chat-settings-body" style="padding: 15px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: rgba(10, 15, 30, 0.95);">
+                    <h5 style="margin-top: 0; margin-bottom: 8px; color: var(--accent-light); font-size: 0.9rem; font-weight: 600;">System Prompt Configuration</h5>
+                    <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.3;">Fine-tune the baseline rules used by the AI to translate your natural language requirements into OpenShift hosting designs and generate follow-up discovery questions.</p>
+                    <textarea id="prompt-text-area" class="select-field" style="width: 100%; flex: 1; min-height: 180px; font-family: 'Courier New', monospace; font-size: 0.75rem; line-height: 1.4; resize: none; margin-bottom: 10px; background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.1); padding: 8px; color: #f5f6f8; border-radius: 4px;"></textarea>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btn-save-prompt" class="btn-send" style="padding: 6px 15px; font-size: 0.8rem; border-radius: 4px; height: auto;">Save Prompt</button>
+                        <button id="btn-reset-prompt" class="btn-quick-action" style="padding: 6px 15px; font-size: 0.8rem; margin: 0; border-radius: 4px; background: transparent; border: 1px solid rgba(255,255,255,0.15);">Reset Default</button>
+                    </div>
+                </div>
+
+                <!-- Predefined Quick Questions -->
+                <div class="chat-quick-actions">
+                    <button class="btn-quick-action" id="action-explain">Explain Sizing</button>
+                    <button class="btn-quick-action" id="action-scc">Recommend SCC</button>
+                    <button class="btn-quick-action" id="action-storage">Analyze Storage</button>
+                </div>
+
+                <!-- Chat Input Footer -->
+                <div class="chat-footer">
+                    <input type="text" id="chat-input" placeholder="Ask about your configuration..." autocomplete="off">
+                    <button id="chat-send-btn" class="btn-send">Send</button>
+                </div>
+                
+                <!-- Connection Status Alert -->
+                <div class="ollama-error-banner custom-hidden" id="ollama-error">
+                    <strong>Local Ollama CORS or Connection Error!</strong> Start Ollama with origins enabled:
+                    <pre style="margin-top: 5px; font-size: 0.7rem; color: #ffcccc;"># Windows (PowerShell)
+$env:OLLAMA_ORIGINS="*" ; ollama serve
+
+# macOS / Linux
+OLLAMA_ORIGINS="*" ollama serve</pre>
+                </div>
+            </div>
+
+            <!-- Float Action Button -->
+            <button class="chat-trigger-btn" id="chat-trigger">
+                <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span class="chat-badge" id="chat-badge">1</span>
+            </button>
+        </div>
+    </div>
+</body>
+</html>
