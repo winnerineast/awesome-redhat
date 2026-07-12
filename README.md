@@ -1,3 +1,5 @@
+![Awesome Red Hat Cover Banner](Assets/images/cover_banner.png)
+
 # Awesome Red Hat [![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
 
 > A curated knowledge base, offline learning academy, and skill-progression vault for **Red Hat Enterprise Linux, Ansible, and the OpenShift ecosystem**.
@@ -13,6 +15,8 @@
 
 This repository is a **fully-fledged, self-contained offline learning platform**. You no longer need external resources to study core concepts. All curriculum notes, CLI walkthroughs, configuration templates, architectural design records, and practice exams reside directly inside this vault. In **v2.1.0**, all OpenShift courses (DO180, DO280, DO380, DO188, DO288, DO378) have been fully enriched with in-depth architectures, copy-pasteable YAML manifests, troubleshooting cheat-sheets, and step-by-step local practice labs.
 
+![Obsidian Vault Screenshot](Assets/images/obsidian_screenshot.png)
+
 ### Option 1: Open in Obsidian (Recommended)
 Obsidian connects these markdown files into a browsable local wiki with dynamic graph views, backlinks, and instant search indexers.
 ```bash
@@ -25,6 +29,8 @@ git clone https://github.com/winnerineast/awesome-redhat.git
 
 ### Option 2: Run the OpenShift Sizing Calculator & Discovery Chatbot (Local Tool)
 This vault contains an interactive architectural sizing calculator and discovery chatbot powered by a local Ollama model (Qwen).
+
+![OpenShift Sizing Web App UI](Assets/images/webapp_ui_screenshot.png)
 
 1. **Prerequisites**:
    - Python 3 installed.
