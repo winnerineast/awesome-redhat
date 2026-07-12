@@ -833,8 +833,8 @@ Example trailing block:
         // 1. DMZ Nodes
         if (dmz) {
             if (gateway) {
-                drawNode(regAX - 60, 55, '3scale Gateway 1', 'svg-node-primary');
-                drawNode(regAX + 60, 55, '3scale Gateway 2', 'svg-node-primary');
+                drawNode(regAX - 60, 55, '3scale Gateway 1', 'svg-node-primary', 105);
+                drawNode(regAX + 60, 55, '3scale Gateway 2', 'svg-node-primary', 105);
             } else {
                 if (sla === 'sno') {
                     drawNode(regAX, 55, 'Router', 'svg-node-primary');
@@ -850,15 +850,15 @@ Example trailing block:
             drawNode(regAX, 160, 'SNO All-in-One Node', 'svg-node-primary', 240, 30);
         } else {
             if (!isManaged) {
-                drawNode(regAX - 90, 130, 'Master 1', 'svg-node-primary', 70, 18);
-                drawNode(regAX, 130, 'Master 2', 'svg-node-primary', 70, 18);
-                drawNode(regAX + 90, 130, 'Master 3', 'svg-node-primary', 70, 18);
+                drawNode(regAX - 90, 145, 'Master 1', 'svg-node-primary', 70, 18);
+                drawNode(regAX, 145, 'Master 2', 'svg-node-primary', 70, 18);
+                drawNode(regAX + 90, 145, 'Master 3', 'svg-node-primary', 70, 18);
             } else {
-                drawText(regAX, 130, 'ROSA/ARO Managed Control Plane', 'var(--text-secondary)');
+                drawText(regAX, 145, 'ROSA/ARO Managed Control Plane', 'var(--text-secondary)');
             }
 
             // Draw Workers
-            const workerY = 175;
+            const workerY = 185;
             const drawCount = Math.min(workers, 4);
             const spacing = 75;
             const startX = regAX - ((drawCount - 1) * spacing) / 2;
@@ -892,18 +892,18 @@ Example trailing block:
 
         // 3. Airgap Nodes
         if (airgap) {
-            drawNode(regAX, 270, 'Quay Registry Bastion', 'svg-node-primary');
+            drawNode(regAX, 270, 'Quay Registry Bastion', 'svg-node-primary', 115);
         }
 
         // 4. Ansible AAP automation pool
         if (aap && sla !== 'sno') {
             const aapX = hasDR ? 60 : 120;
-            drawNode(aapX, 150, 'AAP Controller', 'svg-node-dr', 80, 20);
+            drawNode(aapX, 160, 'AAP Controller', 'svg-node-dr', 95, 20);
         }
 
         // 5. MirrorMaker 2
         if (kafka && mm2 > 0 && hasDR) {
-            drawMirrorMakerNode(400, 175);
+            drawMirrorMakerNode(400, 185);
         }
 
         // Draw Region B Standby Nodes (if DR active)
@@ -912,20 +912,20 @@ Example trailing block:
 
             if (dmz) {
                 if (gateway) {
-                    drawNode(regBX - 60, 55, 'DR 3scale Gateway 1', 'svg-node-dr');
-                    drawNode(regBX + 60, 55, 'DR 3scale Gateway 2', 'svg-node-dr');
-                } else {
+                drawNode(regBX - 60, 55, 'DR 3scale Gateway 1', 'svg-node-dr', 120);
+                drawNode(regBX + 60, 55, 'DR 3scale Gateway 2', 'svg-node-dr', 120);
+            } else {
                     drawNode(regBX - 60, 55, 'DR Ingress 1', 'svg-node-dr');
                     drawNode(regBX + 60, 55, 'DR Ingress 2', 'svg-node-dr');
                 }
             }
 
             if (!isManaged) {
-                drawNode(regBX - 90, 130, 'DR Master 1', 'svg-node-dr', 70, 18);
-                drawNode(regBX, 130, 'DR Master 2', 'svg-node-dr', 70, 18);
-                drawNode(regBX + 90, 130, 'DR Master 3', 'svg-node-dr', 70, 18);
+                drawNode(regBX - 90, 145, 'DR Master 1', 'svg-node-dr', 70, 18);
+                drawNode(regBX, 145, 'DR Master 2', 'svg-node-dr', 70, 18);
+                drawNode(regBX + 90, 145, 'DR Master 3', 'svg-node-dr', 70, 18);
             } else {
-                drawText(regBX, 130, 'Managed DR Control Plane', 'var(--text-secondary)');
+                drawText(regBX, 145, 'Managed DR Control Plane', 'var(--text-secondary)');
             }
 
             const drWorkersCount = isManaged ? (standbyNodes - mm2 - (kafka ? 4 : 0)) : (standbyNodes - 3 - mm2 - (kafka ? 4 : 0));
@@ -935,15 +935,15 @@ Example trailing block:
                 const startX = regBX - ((drawDrCount - 1) * spacing) / 2;
                 for (let i = 0; i < drawDrCount; i++) {
                     const classType = acs ? 'svg-node-dr svg-node-overlay' : 'svg-node-dr';
-                    drawNode(startX + i * spacing, 175, `DR Worker ${i + 1}`, classType, 70, 22);
+                    drawNode(startX + i * spacing, 185, `DR Worker ${i + 1}`, classType, 70, 22);
                 }
                 if (drWorkersCount > 3) {
-                    drawText(regBX, 193, `+ ${drWorkersCount - 3} more DR Workers`, '#f5f6f8');
+                    drawText(regBX, 203, `+ ${drWorkersCount - 3} more DR Workers`, '#f5f6f8');
                 }
             }
 
             if (kafka) {
-                drawKafkaBroker(regBX + 145, 175);
+                drawKafkaBroker(regBX + 145, 185);
             }
 
             if (airgap) {
@@ -1370,7 +1370,497 @@ Offer recommendations on Ceph pool placement, Metro-DR sync limits, and disconne
         }
     }
 
+    // IAAS CODE GENERATION DRAWER ENGINE
+    function initIaasDrawer() {
+        const btnTrigger = document.getElementById('btn-trigger-iaas');
+        const drawer = document.getElementById('iaas-drawer');
+        const btnClose = document.getElementById('btn-close-drawer');
+        
+        const iaasProvider = document.getElementById('iaas-provider');
+        const iaasClusterName = document.getElementById('iaas-cluster-name');
+        const iaasBaseDomain = document.getElementById('iaas-base-domain');
+        const iaasVpcCidr = document.getElementById('iaas-vpc-cidr');
+        const iaasSshKey = document.getElementById('iaas-ssh-key');
+
+        const tabTerraform = document.getElementById('tab-terraform');
+        const tabInstallConfig = document.getElementById('tab-install-config');
+        const tabAnsible = document.getElementById('tab-ansible');
+
+        const codePreviewBlock = document.getElementById('code-preview-block');
+        const filenameLabel = document.getElementById('preview-filename-label');
+        const langLabel = document.getElementById('preview-lang-label');
+
+        const btnCopy = document.getElementById('btn-copy-code');
+        const btnDownload = document.getElementById('btn-download-code');
+
+        let activeTab = 'terraform'; // 'terraform' | 'install-config' | 'ansible'
+
+        btnTrigger.addEventListener('click', () => {
+            drawer.classList.remove('custom-hidden');
+            updateIaasCodePreview();
+        });
+
+        btnClose.addEventListener('click', () => {
+            drawer.classList.add('custom-hidden');
+        });
+
+        // Close drawer when clicking outside the content box
+        drawer.addEventListener('click', (e) => {
+            if (e.target === drawer) {
+                drawer.classList.add('custom-hidden');
+            }
+        });
+
+        const iaasInputs = [iaasProvider, iaasClusterName, iaasBaseDomain, iaasVpcCidr, iaasSshKey];
+        iaasInputs.forEach(input => {
+            input.addEventListener('input', updateIaasCodePreview);
+        });
+
+        tabTerraform.addEventListener('click', () => switchTab('terraform'));
+        tabInstallConfig.addEventListener('click', () => switchTab('install-config'));
+        tabAnsible.addEventListener('click', () => switchTab('ansible'));
+
+        btnCopy.addEventListener('click', () => {
+            const codeText = codePreviewBlock.textContent;
+            navigator.clipboard.writeText(codeText).then(() => {
+                const origText = btnCopy.textContent;
+                btnCopy.textContent = 'Copied!';
+                btnCopy.style.background = 'var(--success-green)';
+                setTimeout(() => {
+                    btnCopy.textContent = origText;
+                    btnCopy.style.background = 'var(--platform-blue)';
+                }, 2000);
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        });
+
+        btnDownload.addEventListener('click', () => {
+            const codeText = codePreviewBlock.textContent;
+            let filename = 'main.tf';
+            let mimeType = 'text/plain';
+            if (activeTab === 'install-config') {
+                filename = 'install-config.yaml';
+                mimeType = 'text/yaml';
+            } else if (activeTab === 'ansible') {
+                filename = 'playbook.yml';
+                mimeType = 'text/yaml';
+            }
+            
+            const blob = new Blob([codeText], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        function switchTab(tab) {
+            activeTab = tab;
+            [tabTerraform, tabInstallConfig, tabAnsible].forEach(btn => btn.classList.remove('active'));
+            if (tab === 'terraform') {
+                tabTerraform.classList.add('active');
+            } else if (tab === 'install-config') {
+                tabInstallConfig.classList.add('active');
+            } else if (tab === 'ansible') {
+                tabAnsible.classList.add('active');
+            }
+            updateIaasCodePreview();
+        }
+
+        function updateIaasCodePreview() {
+            const provider = iaasProvider.value;
+            const clusterName = iaasClusterName.value || 'ocp-prod';
+            const baseDomain = iaasBaseDomain.value || 'example.com';
+            const vpcCidr = iaasVpcCidr.value || '10.0.0.0/16';
+            const sshKey = iaasSshKey.value || '';
+
+            // Retrieve current values computed from primary sizing UI
+            const workers = parseInt(document.getElementById('platform-worker-nodes').textContent.split(' ')[0]) || 3;
+            const profile = document.getElementById('node-profile').value;
+            const isManaged = (document.getElementById('infra-model').value === 'cloud-managed');
+            const replicas = parseInt(document.getElementById('input-replicas').value) || 10;
+            const hasDR = (document.getElementById('availability-sla').value.includes('dr'));
+            
+            const serviceMeshActive = document.getElementById('input-service-mesh').checked;
+            const acsActive = document.getElementById('input-sec-acs').checked;
+            const gitopsActive = document.getElementById('input-sec-gitops').checked;
+            const kafkaActive = document.getElementById('input-sec-kafka').checked;
+            const pipelinesActive = document.getElementById('input-sec-pipelines').checked;
+
+            let code = '';
+            
+            if (activeTab === 'terraform') {
+                filenameLabel.textContent = 'main.tf';
+                langLabel.textContent = 'HCL / Terraform';
+                code = generateTerraformCode(provider, clusterName, baseDomain, vpcCidr, sshKey, workers, profile, isManaged, serviceMeshActive, kafkaActive, hasDR);
+            } else if (activeTab === 'install-config') {
+                filenameLabel.textContent = 'install-config.yaml';
+                langLabel.textContent = 'YAML / install-config';
+                code = generateInstallConfig(provider, clusterName, baseDomain, vpcCidr, sshKey, workers, isManaged);
+            } else if (activeTab === 'ansible') {
+                filenameLabel.textContent = 'playbook.yml';
+                langLabel.textContent = 'YAML / Ansible';
+                code = generateAnsiblePlaybook(clusterName, baseDomain, serviceMeshActive, gitopsActive, acsActive, kafkaActive, pipelinesActive);
+            }
+
+            codePreviewBlock.textContent = code;
+        }
+
+        function generateTerraformCode(provider, cluster, domain, cidr, key, workers, profile, isManaged, mesh, kafka, hasDR) {
+            let instanceType = 'm5.2xlarge';
+            if (profile === 'aws-xl') instanceType = 'm5.xlarge';
+            else if (profile === 'baremetal') instanceType = 'r5.8xlarge (bare-metal mock)';
+
+            let providerConfig = '';
+            let vmResources = '';
+
+            if (provider === 'aws') {
+                providerConfig = `provider "aws" {
+  region = "us-east-1"
+}`;
+                if (isManaged) {
+                    vmResources = `# Red Hat OpenShift Service on AWS (ROSA) Managed Cluster Resource
+resource "rhcs_cluster_rosa_classic" "rosa_cluster" {
+  name           = "${cluster}"
+  cloud_provider = "aws"
+  region         = "us-east-1"
+  multi_az       = ${hasDR ? 'true' : 'false'}
+  version        = "4.16.0"
+  
+  admin_credentials = {
+    username = "admin"
+    password = "SuperSecretPassword123!"
+  }
+
+  aws_infrastructure = {
+    vpc_id = aws_vpc.ocp_vpc.id
+    subnets = [
+      aws_subnet.private_az_1.id,
+      aws_subnet.private_az_2.id
+    ]
+  }
+
+  # Node sizing determined by compiler sizing logic
+  compute_node_instance_type = "${instanceType}"
+  compute_nodes_count        = ${workers}
+}`;
+                } else {
+                    vmResources = `# Self-Managed Master Instances (Control Plane)
+resource "aws_instance" "ocp_master" {
+  count         = 3
+  ami           = "ami-0c7217cdde317cfec" # RHCOS AMI
+  instance_type = "m5.xlarge"
+  subnet_id     = aws_subnet.private.id
+  key_name      = aws_key_pair.ocp_key.key_name
+
+  tags = {
+    Name = "\${var.cluster_name}-master-\${count.index}"
+  }
+}
+
+# Self-Managed Worker Compute Instances (Bin-Packed Scale)
+resource "aws_instance" "ocp_worker" {
+  count         = ${workers}
+  ami           = "ami-0c7217cdde317cfec" # RHCOS AMI
+  instance_type = "${instanceType}"
+  subnet_id     = aws_subnet.private.id
+  key_name      = aws_key_pair.ocp_key.key_name
+
+  tags = {
+    Name = "\${var.cluster_name}-worker-\${count.index}"
+  }
+}`;
+                }
+
+                return `###########################################################
+# Deployable Terraform Script for Red Hat OpenShift
+# Generated dynamically based on Compiled Sizing Spec
+# Sizing Target: ${workers} worker nodes using ${profile}
+###########################################################
+
+${providerConfig}
+
+variable "cluster_name" {
+  type    = string
+  default = "${cluster}"
+}
+
+variable "base_domain" {
+  type    = string
+  default = "${domain}"
+}
+
+# Network VPC Subnet Definitions
+resource "aws_vpc" "ocp_vpc" {
+  cidr_block           = "${cidr}"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "\${var.cluster_name}-vpc"
+  }
+}
+
+resource "aws_key_pair" "ocp_key" {
+  key_name   = "\${var.cluster_name}-ssh-key"
+  public_key = "${key ? key.substring(0, 80) + '...' : 'ssh-rsa AAAAB3NzaC...'}"
+}
+
+${vmResources}
+
+output "cluster_api_url" {
+  value = "https://api.\${var.cluster_name}.\${var.base_domain}:6443"
+}
+`;
+            } else if (provider === 'azure') {
+                return `###########################################################
+# Azure Resource Manager (ARM) Terraform Script
+# Generated dynamically based on Compiled Sizing Spec
+###########################################################
+
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "ocp_rg" {
+  name     = "${cluster}-rg"
+  location = "East US"
+}
+
+# Managed OpenShift Cluster ARO
+resource "azurerm_redhat_openshift_cluster" "aro_cluster" {
+  name                = "${cluster}"
+  location            = azurerm_resource_group.ocp_rg.location
+  resource_group_name = azurerm_resource_group.ocp_rg.name
+
+  virtual_network_profile {
+    # Custom subnets derived from CIDR
+  }
+
+  master_profile {
+    vm_size   = "Standard_D8s_v3"
+    subnet_id = "/subscriptions/.../subnets/master-subnet"
+  }
+
+  worker_profile {
+    vm_size      = "Standard_D8s_v3"
+    disk_size_gb = 128
+    node_count   = ${workers}
+    subnet_id    = "/subscriptions/.../subnets/worker-subnet"
+  }
+}
+`;
+            } else if (provider === 'vsphere') {
+                return `###########################################################
+# VMware vSphere Terraform Script for OpenShift Node Pool
+# Generated dynamically based on Compiled Sizing Spec
+###########################################################
+
+provider "vsphere" {
+  user                 = "administrator@vsphere.local"
+  password             = "VMwarePassword!"
+  vsphere_server       = "vcenter.example.com"
+  allow_unverified_ssl = true
+}
+
+data "vsphere_datacenter" "dc" {
+  name = "Datacenter"
+}
+
+data "vsphere_datastore" "datastore" {
+  name          = "SAN-Datastore"
+  datacenter_id = data.vsphere_datacenter.dc.id
+}
+
+# Provisions OCP nodes on ESXi cluster
+resource "vsphere_virtual_machine" "ocp_worker_node" {
+  count            = ${workers}
+  name             = "${cluster}-worker-\${count.index}"
+  resource_pool_id = "pool-id"
+  datastore_id     = data.vsphere_datastore.datastore.id
+
+  num_cpus = ${profile === 'aws-xl' ? 4 : 8}
+  memory   = ${profile === 'aws-xl' ? 16384 : 32768} # GiB mapped to MB
+  guest_id = "rhel8_64Guest"
+
+  network_interface {
+    network_id   = "vm-network-id"
+    adapter_type = "vmxnet3"
+  }
+
+  disk {
+    label            = "disk0"
+    size             = 120
+    eagerly_scrub    = false
+    thin_provisioned = true
+  }
+}
+`;
+            } else { // baremetal
+                return `###########################################################
+# Bare-Metal PXE/MAAS Deployment Variables Configuration
+# Generated dynamically based on Sizing Spec
+###########################################################
+
+# Node Inventory for MAAS (Metal as a Service) / PXE Provisioning
+nodes:
+  - name: master-0.prod.local
+    mac: "52:54:00:fa:19:bc"
+    ip: "192.168.1.10"
+    role: master
+    cpu: 8
+    ram: 32768
+  - name: master-1.prod.local
+    mac: "52:54:00:fa:20:bc"
+    ip: "192.168.1.11"
+    role: master
+    cpu: 8
+    ram: 32768
+  - name: master-2.prod.local
+    mac: "52:54:00:fa:21:bc"
+    ip: "192.168.1.12"
+    role: master
+    cpu: 8
+    ram: 32768
+  
+  # Auto-generated ${workers} compute worker nodes
+${Array.from({length: workers}, (_, i) => `  - name: worker-${i}.prod.local
+    mac: "52:54:00:fa:w${i}:bc"
+    ip: "192.168.1.2${i}"
+    role: worker
+    cpu: ${profile === 'aws-xl' ? 4 : 8}
+    ram: ${profile === 'aws-xl' ? 16384 : 32768}`).join('\n')}
+`;
+            }
+        }
+
+        function generateInstallConfig(provider, cluster, domain, cidr, key, workers, isManaged) {
+            let platformYaml = '';
+            if (provider === 'aws') {
+                platformYaml = `platform:
+  aws:
+    region: us-east-1`;
+            } else if (provider === 'azure') {
+                platformYaml = `platform:
+  azure:
+    baseDomainResourceGroupName: ExampleRG
+    region: EastUS`;
+            } else if (provider === 'vsphere') {
+                platformYaml = `platform:
+  vsphere:
+    vCenter: vcenter.example.com
+    username: administrator@vsphere.local
+    password: Password123
+    datacenter: Datacenter
+    defaultDatastore: SAN-Datastore`;
+            } else {
+                platformYaml = `platform:
+  none: {}`;
+            }
+
+            return `apiVersion: v1
+baseDomain: ${domain}
+metadata:
+  name: ${cluster}
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: ${cidr}
+  networkType: OVNKubernetes
+  serviceNetwork:
+  - 172.30.0.0/16
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: ${workers}
+${platformYaml}
+pullSecret: '{"auths":{"cloud.openshift.com":{"auth":"dG9rZW4tc3VwZXItaGVhdmx5..."}}}'
+sshKey: |
+  ${key ? key : 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQD... ocp-admin@local'}
+`;
+        }
+
+        function generateAnsiblePlaybook(cluster, domain, mesh, gitops, acs, kafka, pipelines) {
+            let playtasks = ``;
+
+            if (gitops) {
+                playtasks += `    - name: install_gitops
+      include_role:
+        name: openshift_gitops
+      vars:
+        gitops_channel: stable
+        argocd_instance_name: ${cluster}-gitops\n\n`;
+            }
+
+            if (pipelines) {
+                playtasks += `    - name: install_pipelines
+      include_role:
+        name: openshift_pipelines
+      vars:
+        concurrent_builds_limit: 4\n\n`;
+            }
+
+            if (mesh) {
+                playtasks += `    - name: install_service_mesh
+      include_role:
+        name: openshift_service_mesh
+      vars:
+        mesh_profile: production-ha\n\n`;
+            }
+
+            if (kafka) {
+                playtasks += `    - name: install_amq_streams_kafka
+      include_role:
+        name: openshift_amq_streams
+      vars:
+        kafka_cluster_name: my-broker
+        kafka_replica_count: 3\n\n`;
+            }
+
+            if (acs) {
+                playtasks += `    - name: bootstrap_acs_security
+      include_role:
+        name: openshift_acs_stackrox
+      vars:
+        central_instance: true
+        sensor_active: true\n\n`;
+            }
+
+            return `---
+- name: OpenShift Day-2 Cluster Post-Deployment Configurations
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    api_url: "https://api.${cluster}.${domain}:6443"
+    token: "sha256~ocp-api-session-auth-token-string"
+
+  tasks:
+    - name: Login to Red Hat OpenShift cluster
+      redhat.openshift.openshift_auth:
+        host: "{{ api_url }}"
+        token: "{{ token }}"
+        validate_certs: false
+      register: auth_info
+
+${playtasks ? playtasks : '    - name: log_empty_task\n      debug:\n        msg: "No platform operator operators selected. Sizing calculations verified."'}
+`;
+        }
+    }
+
     initEvents();
     updateCalculations();
     checkOllamaAvailability();
+    initIaasDrawer();
 });

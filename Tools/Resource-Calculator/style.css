@@ -927,3 +927,352 @@ body {
     color: var(--accent-light) !important;
     transform: rotate(45deg);
 }
+
+/* ==========================================
+   SOLUTION ARCHITECT REDESIGN STYLES
+   ========================================== */
+
+/* AI Discovery Callout Banner */
+.ai-banner-callout {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: linear-gradient(135deg, rgba(0, 173, 238, 0.12) 0%, rgba(163, 0, 214, 0.05) 100%);
+    border: 1px dashed rgba(0, 173, 238, 0.35);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.ai-banner-sparkle {
+    font-size: 1.5rem;
+    animation: sparkleFloat 3s ease-in-out infinite;
+}
+
+@keyframes sparkleFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.1); }
+}
+
+.ai-banner-text strong {
+    font-size: 0.85rem;
+    color: var(--platform-blue);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.ai-banner-text p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+}
+
+/* Step Container Styles */
+.step-container {
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.step-container:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.border-step-app { border-left: 3.5px solid var(--redhat-red); }
+.border-step-app:hover { box-shadow: 0 4px 15px rgba(238, 0, 0, 0.05); }
+
+.border-step-platform { border-left: 3.5px solid var(--platform-blue); }
+.border-step-platform:hover { box-shadow: 0 4px 15px rgba(0, 173, 238, 0.05); }
+
+.border-step-dr { border-left: 3.5px solid var(--automation-orange); }
+.border-step-dr:hover { box-shadow: 0 4px 15px rgba(255, 156, 26, 0.05); }
+
+.border-step-infra { border-left: 3.5px solid var(--infra-purple); }
+.border-step-infra:hover { box-shadow: 0 4px 15px rgba(163, 0, 214, 0.05); }
+
+.step-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+.step-title:hover {
+    color: #ffffff;
+}
+
+.step-num {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #ffffff;
+}
+
+.step-num-app { background: var(--redhat-red); }
+.step-num-platform { background: var(--platform-blue); }
+.step-num-dr { background: var(--automation-orange); }
+.step-num-infra { background: var(--infra-purple); }
+
+/* Warning / Locks Dependency Badges */
+.rule-hint-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--automation-orange);
+    background: rgba(255, 156, 26, 0.1);
+    border: 1px solid rgba(255, 156, 26, 0.25);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+}
+
+.calc-overhead-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--devsecops-teal);
+    background: rgba(0, 189, 174, 0.1);
+    border: 1px solid rgba(0, 189, 174, 0.25);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* Formula / Logic Micro-explanations inside Output Cards */
+.calc-formula-container {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.calc-formula-text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    opacity: 0.85;
+    line-height: 1.3;
+    display: block;
+}
+
+/* Spec Header layout for Generate Code Button placement */
+.spec-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.btn-generate-code {
+    background: linear-gradient(135deg, rgba(0, 173, 238, 0.2) 0%, rgba(0, 173, 238, 0.05) 100%);
+    border: 1px dashed var(--platform-blue);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-family: var(--font-stack);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 173, 238, 0.1);
+}
+
+.btn-generate-code:hover {
+    background: var(--platform-blue);
+    color: white;
+    border-style: solid;
+    box-shadow: 0 4px 18px var(--platform-blue-glow);
+    transform: translateY(-1px);
+}
+
+/* IaaS Drawer Overlay & Content */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
+    background: rgba(5, 7, 10, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: flex-end;
+    transition: opacity 0.3s ease;
+}
+
+.drawer-content {
+    width: 620px;
+    height: 100%;
+    border-radius: 0;
+    border-left: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: drawerSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes drawerSlideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.drawer-header {
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-glass);
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drawer-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.drawer-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.drawer-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.drawer-section h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--platform-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+/* Tabs inside Drawer */
+.drawer-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-glass);
+    gap: 5px;
+}
+
+.drawer-tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    padding: 10px 16px;
+    font-family: var(--font-stack);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.drawer-tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.drawer-tab-btn.active {
+    color: var(--platform-blue);
+    border-bottom-color: var(--platform-blue);
+}
+
+/* Code Preview Area */
+.code-preview-container {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.code-preview-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    font-family: monospace;
+}
+
+.preview-filename {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.code-lang-label {
+    color: var(--text-secondary);
+}
+
+.code-preview-container pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    max-height: 400px;
+    min-height: 250px;
+}
+
+.code-preview-container code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #f5f6f8;
+    display: block;
+    white-space: pre;
+}
+
+.drawer-footer {
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--border-glass);
+    padding: 18px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+@media (max-width: 700px) {
+    .drawer-content {
+        width: 100vw;
+    }
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
